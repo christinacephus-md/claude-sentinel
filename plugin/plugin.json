@@ -1,0 +1,16 @@
+{
+  "name": "model-router",
+  "version": "2.0.0",
+  "description": "Intelligent model routing + cost tracking for Claude Code",
+  "author": "Christina Cephus",
+  "hooks": {
+    "enabled": true,
+    "config_file": "hooks/hooks.json"
+  },
+  "components": {
+    "hook": "hooks/model_router.py",
+    "cost_report": "hooks/cost_report.py",
+    "agents": ["agents/router-advisor.md"],
+    "commands": ["commands/cost-report.md", "commands/budget-check.md"]
+  }
+}

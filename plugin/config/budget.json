@@ -1,0 +1,6 @@
+{
+  "daily_limit_usd": 10.00,
+  "weekly_limit_usd": 50.00,
+  "alert_threshold_pct": 80,
+  "notes": "Set to null to disable. Alert fires when spend exceeds threshold %."
+}

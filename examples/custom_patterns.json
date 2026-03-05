@@ -1,0 +1,53 @@
+{
+  "description": "Example custom patterns - copy to ~/.claude/plugins/model-router/config/patterns.json",
+  "haiku_keywords": [
+    "typo",
+    "format",
+    "rename",
+    "simple",
+    "read file",
+    "show me",
+    "what is",
+    "list",
+    "find file",
+    "quick",
+    "view",
+    "display",
+    "check",
+    "status",
+    "version",
+    "info",
+    "print"
+  ],
+  "opus_keywords": [
+    "architect",
+    "design system",
+    "refactor",
+    "debug across",
+    "investigate",
+    "analyze",
+    "security",
+    "performance",
+    "optimize",
+    "migration",
+    "strategy",
+    "tradeoff",
+    "implement from scratch",
+    "complex",
+    "plan",
+    "audit",
+    "review entire",
+    "redesign",
+    "scale",
+    "distributed",
+    "microservices",
+    "infrastructure"
+  ],
+  "sonnet_default": true,
+  "notes": [
+    "Add your team-specific keywords here",
+    "Simple tasks: Reading, listing, viewing",
+    "Complex tasks: Planning, architecting, analyzing",
+    "Everything else defaults to Sonnet"
+  ]
+}

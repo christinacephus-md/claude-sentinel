@@ -1,0 +1,15 @@
+{
+  "description": "Model routing hook for cost optimization - routes prompts to optimal Claude model",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/model_router.py"
+          }
+        ]
+      }
+    ]
+  }
+}

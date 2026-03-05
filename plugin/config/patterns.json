@@ -1,0 +1,21 @@
+{
+  "haiku_keywords": [
+    "typo", "format", "rename", "simple", "read file", "show me",
+    "what is", "list", "find file", "quick", "view", "display",
+    "check", "status", "version", "print", "look at", "open",
+    "see the", "tell me", "which", "cat", "head"
+  ],
+  "opus_keywords": [
+    "architect", "design system", "refactor entire", "debug across",
+    "investigate", "analyze", "security", "performance", "optimize",
+    "migration", "strategy", "tradeoff", "implement from scratch",
+    "plan", "audit", "review entire", "redesign", "scale",
+    "distributed", "microservices", "infrastructure", "terraform",
+    "think hard", "deep dive", "comprehensive", "surveil",
+    "synthesize", "research", "hipaa", "compliance", "phi",
+    "encryption", "fhir", "hl7", "patient data security",
+    "access control", "audit logging", "data governance",
+    "privacy", "gdpr"
+  ],
+  "sonnet_default": true
+}
