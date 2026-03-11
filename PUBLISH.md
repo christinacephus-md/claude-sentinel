@@ -178,7 +178,7 @@ chmod +x install.sh
 
 Potential savings up to 35% by routing:
 - 60% simple queries → Haiku ($0.25/1M)
-- 35% standard code → Sonnet ($3.00/1M)
+- 25% standard code → Sonnet ($3.00/1M)
 - 5% complex tasks → Opus ($15.00/1M)
 
 ### 📚 Documentation

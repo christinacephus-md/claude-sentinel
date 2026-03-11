@@ -1,4 +1,4 @@
-# Claude Model Router v3.0
+# Claude Model Router v4.0
 
 <p align="center">
   <img src="model-router.jpg" alt="Claude Model Router - Intelligent Routing and Cost Tracking" width="700">
@@ -29,7 +29,7 @@
 
 ## The Fix
 
-v3 is a single install that covers all five. Model routing tells you when to downshift. Git hooks strip AI trailers before they hit your history. Conventional commit gates enforce message quality. Session summaries log what happened. All of it stacks with `/fast` mode.
+v4 is a single install that covers all five. Model routing uses tiered keyword weights, word boundary matching, and downgrade signals to aggressively route simple tasks to Haiku. Git hooks strip AI trailers before they hit your history. Conventional commit gates enforce message quality. Session summaries log what happened. All of it stacks with `/fast` mode.
 
 ---
 
@@ -55,23 +55,29 @@ cd claude-model-router
 
 ### 1. Model Routing (UserPromptSubmit)
 
-Every prompt scored across 5 factors: keywords, tool complexity, file context, inference depth, conversation depth. Short follow-ups auto-route to Haiku.
+Every prompt scored across 5 factors with tiered keyword weights, word boundary matching, and downgrade signal detection. Short follow-ups auto-route to Haiku. v4.0 adds savings tracking vs an all-Opus baseline.
 
 ```
 +---------------------------------------------------------+
-|  Model Router v3.1 - Cost Optimization                  |
+|  Model Router v4.0 - Cost Optimization                  |
 +---------------------------------------------------------+
 
   Analysis:
-    Keywords: Simple=2 Complex=0
+    Keywords: Simple=2 Complex=0 Downgrade=3
     Tool Complexity: LOW
+    File Context: no_files
     Inference Depth: SHALLOW
     Conversation: CONTINUATION
-    Score: -6
+    Score: -7
 
   Recommendation: /model haiku
+    Reason: Short follow-up
 
-  Today: 23 prompts | H:14 S:7 O:2 | Est: $1.84
+  Cost (per 1M input tokens):
+    Haiku:  $0.25   Sonnet: $3.00   Opus: $15.00
+
+  Today: 23 prompts | H:16 S:5 O:2 | Est: $1.12
+  Saved vs all-Opus: $4.38
 ```
 
 ### 2. Git Hygiene (commit-msg, prepare-commit-msg, pre-push)
@@ -248,6 +254,7 @@ claude-model-router/
 
 ## Version History
 
+- **v4.0.0** - Tiered keyword weights (1-4 pts by signal strength), word boundary regex matching, downgrade signals ("just", "quickly", "trivial"), stricter opus threshold (10 vs 7), wider haiku band (score <= -1), short prompt cap (<60 chars can't trigger opus), expanded continuation detection (35+ phrases), savings tracking vs all-opus baseline
 - **v3.1.0** - Token-weighted cost estimates (prompt length / 4 + context overhead), per-row Opus baseline calculation, backward-compatible CSV format, honest savings metrics
 - **v3.0.0** - Git hygiene (3 hooks), PreToolUse/PostToolUse/Stop Claude Code hooks, conventional commit enforcement, session telemetry, restructured install with --update/--git-hooks/--all, JSON validation
 - **v2.0.0** - Cost tracking, budget alerts, conversation depth, agents, commands
