@@ -18,6 +18,7 @@ import os
 import sys
 import re
 import csv
+import tempfile
 from datetime import datetime, date
 from pathlib import Path
 
@@ -30,6 +31,7 @@ ROUTER_HOME = os.environ.get(
 CONFIG_FILE = os.path.join(ROUTER_HOME, 'config', 'patterns.json')
 COST_LOG = os.path.join(ROUTER_HOME, 'logs', 'cost_log.csv')
 BUDGET_FILE = os.path.join(ROUTER_HOME, 'config', 'budget.json')
+SESSION_DIR = os.path.join(ROUTER_HOME, 'logs', 'sessions')
 
 # Model pricing (per 1M tokens)
 PRICING = {
@@ -418,6 +420,102 @@ def check_budget():
     return alerts if alerts else None
 
 
+# --- Session Depth Tracking ---
+
+# Cache write pricing per 1M tokens (the hidden cost killer)
+CACHE_WRITE_PRICING = {
+    'haiku':  1.25,
+    'sonnet': 3.75,
+    'opus':   18.75,
+}
+
+# Estimated context size growth per prompt (tokens)
+# Based on real data: avg ~4-6K tokens per turn (prompt + response + tool results)
+EST_TOKENS_PER_TURN = 5000
+
+# Session depth thresholds and warnings
+SESSION_THRESHOLDS = [
+    (15, 'TIP',     'Consider /compact to reduce context size'),
+    (25, 'WARNING', 'Cache costs growing — try /compact or start fresh'),
+    (40, 'ALERT',   'Long session! Start a new conversation to reset cache costs'),
+]
+
+
+def get_session_id():
+    """Get a stable session ID for this Claude Code process.
+
+    Uses CLAUDE_SESSION_ID env var if available, otherwise falls back
+    to parent PID (the Claude Code process that spawned this hook).
+    """
+    return os.environ.get('CLAUDE_SESSION_ID', str(os.getppid()))
+
+
+def track_session_depth():
+    """Increment and return the current session prompt count.
+
+    Writes a counter file per session in SESSION_DIR.
+    Returns (prompt_number, est_context_tokens, cache_cost_alert).
+    """
+    try:
+        os.makedirs(SESSION_DIR, exist_ok=True)
+        session_id = get_session_id()
+        session_file = os.path.join(SESSION_DIR, f'session_{session_id}.json')
+
+        # Read or initialize
+        if os.path.exists(session_file):
+            with open(session_file, 'r') as f:
+                data = json.load(f)
+            data['prompt_count'] += 1
+        else:
+            data = {
+                'session_id': session_id,
+                'started': datetime.now().isoformat(),
+                'prompt_count': 1,
+            }
+
+        # Write back
+        with open(session_file, 'w') as f:
+            json.dump(data, f)
+
+        prompt_count = data['prompt_count']
+        est_context = prompt_count * EST_TOKENS_PER_TURN
+
+        # Check thresholds (use highest matching)
+        alert = None
+        for threshold, level, message in SESSION_THRESHOLDS:
+            if prompt_count >= threshold:
+                # Estimate cache write cost per prompt at this depth
+                opus_cache_cost = CACHE_WRITE_PRICING['opus'] * est_context / 1_000_000
+                sonnet_cache_cost = CACHE_WRITE_PRICING['sonnet'] * est_context / 1_000_000
+                alert = {
+                    'level': level,
+                    'message': message,
+                    'prompt_count': prompt_count,
+                    'est_context_k': round(est_context / 1000),
+                    'opus_cache_per_prompt': opus_cache_cost,
+                    'sonnet_cache_per_prompt': sonnet_cache_cost,
+                }
+
+        return prompt_count, est_context, alert
+
+    except Exception:
+        return 0, 0, None
+
+
+def cleanup_stale_sessions():
+    """Remove session files older than 24 hours (runs occasionally)."""
+    try:
+        if not os.path.exists(SESSION_DIR):
+            return
+        now = datetime.now().timestamp()
+        for f in os.listdir(SESSION_DIR):
+            fp = os.path.join(SESSION_DIR, f)
+            if now - os.path.getmtime(fp) > 86400:  # 24 hours
+                os.remove(fp)
+    except Exception:
+        pass
+
+
 # --- Main ---
 
 def main():
@@ -445,6 +543,13 @@ def main():
 
         # Log the decision
         log_routing_decision(model, score, reason, prompt, project_dir)
+
+        # Track session depth
+        session_depth, est_context, session_alert = track_session_depth()
+
+        # Cleanup stale sessions occasionally (1 in 20 calls)
+        if session_depth % 20 == 0:
+            cleanup_stale_sessions()
 
         # Get daily stats
         counts, total_prompts, daily_est, daily_savings = get_daily_summary()
@@ -487,6 +592,19 @@ def main():
                 output_lines.append(
                     f'  Saved vs all-Opus: ${daily_savings:.2f}'
                 )
+
+        # Session depth alert
+        if session_alert:
+            lvl = session_alert['level']
+            output_lines += [
+                '',
+                f'  {lvl}: Session depth: {session_alert["prompt_count"]} prompts (~{session_alert["est_context_k"]}K context)',
+                f'    Cache write/prompt: Opus=${session_alert["opus_cache_per_prompt"]:.2f}  Sonnet=${session_alert["sonnet_cache_per_prompt"]:.2f}',
+                f'    -> {session_alert["message"]}',
+            ]
+        elif session_depth > 0:
+            est_k = round(est_context / 1000)
+            output_lines.append(f'  Session: {session_depth} prompts (~{est_k}K context)')
 
         # Budget alerts
         if budget_alerts:
