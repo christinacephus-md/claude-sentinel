@@ -1,4 +1,4 @@
-# Claude Model Router v4.0
+# Claude Model Router v4.0.1
 
 <p align="center">
   <img src="model-router-v4.png" alt="Claude Model Router v4.0 - Intelligent Routing and Cost Optimization" width="700">
@@ -106,7 +106,7 @@ Three git hooks working together to keep your history clean:
 - Bypass with `--no-verify` when needed
 
 **pre-push** — last line of defense:
-- Scans all outgoing commits for leaked AI trailers
+- Scans outgoing commits for leaked AI trailers (scoped to `origin/{default-branch}..HEAD` on new branches)
 - Blocks the push with a clear message showing which commits are dirty
 - Bypass with `--no-verify`
 
@@ -276,6 +276,7 @@ claude-model-router/
 
 ## Version History
 
+- **v4.0.1** - Fix pre-push hook scanning entire git history on new branches — now scopes to `origin/{main,master}..HEAD` instead of walking all reachable commits; fix awk SHA parsing in blocked-commit listing
 - **v4.0.0** - Tiered keyword weights (1-4 pts by signal strength), word boundary regex matching, downgrade signals ("just", "quickly", "trivial"), stricter opus threshold (10 vs 7), wider haiku band (score <= -1), short prompt cap (<60 chars can't trigger opus), expanded continuation detection (35+ phrases), savings tracking vs all-opus baseline, session depth tracking with cache cost alerts at 15/25/40 prompt thresholds
 - **v3.1.0** - Token-weighted cost estimates (prompt length / 4 + context overhead), per-row Opus baseline calculation, backward-compatible CSV format, honest savings metrics
 - **v3.0.0** - Git hygiene (3 hooks), PreToolUse/PostToolUse/Stop Claude Code hooks, conventional commit enforcement, session telemetry, restructured install with --update/--git-hooks/--all, JSON validation
