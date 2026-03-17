@@ -15,8 +15,21 @@ while read local_ref local_sha remote_ref remote_sha; do
 
   # Determine the range to scan
   if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
-    # New branch — scan all commits
-    RANGE="$local_sha"
+    # New branch — only scan commits not yet on the default branch
+    DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+    if [ -z "$DEFAULT_BRANCH" ]; then
+      if git rev-parse --verify origin/main >/dev/null 2>&1; then
+        DEFAULT_BRANCH="main"
+      elif git rev-parse --verify origin/master >/dev/null 2>&1; then
+        DEFAULT_BRANCH="master"
+      fi
+    fi
+    if [ -n "$DEFAULT_BRANCH" ]; then
+      RANGE="origin/${DEFAULT_BRANCH}..${local_sha}"
+    else
+      echo "  Warning: Could not determine default branch. Skipping AI trailer scan."
+      continue
+    fi
   else
     RANGE="$remote_sha..$local_sha"
   fi
@@ -33,8 +46,9 @@ while read local_ref local_sha remote_ref remote_sha; do
     echo "  The following commits contain Claude Code attribution markers:"
     echo ""
 
-    git log --format="  %h  %s" "$RANGE" 2>/dev/null | while read line; do
-      FULL=$(git log --format="%b" "$(echo $line | awk '{print $1}')" -1 2>/dev/null)
+    git log --format="%h %s" "$RANGE" 2>/dev/null | while read line; do
+      SHORT_SHA=$(echo "$line" | awk '{print $1}')
+      FULL=$(git log --format="%b" "$SHORT_SHA" -1 2>/dev/null)
       if echo "$FULL" | grep -qiE "co-authored-by.*claude|generated.with.*claude|noreply@anthropic"; then
         echo "    $line"
       fi
