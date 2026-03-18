@@ -1,7 +1,7 @@
 # Claude Model Router v5.0
 
 <p align="center">
-  <img src="model-router-v5.png" alt="Claude Model Router v5.0 - Intelligent Routing and Cost Optimization" width="700">
+  <img src="CMR5.0.png" alt="Claude Model Router v5.0 - Intelligent Routing and Cost Optimization" width="700">
 </p>
 
 <p align="center">
