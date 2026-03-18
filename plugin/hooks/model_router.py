@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """
-Claude Model Router v4.0
+Claude Model Router v5.0
 Intelligent model routing + cost tracking for Claude Code
 
-Key improvements over v3.1:
+v5.0 improvements over v4.0:
+- Debug keyword tier: debugging prompts route to Sonnet minimum
+- Code review routing: review/PR patterns get appropriate model selection
+- Smart compaction advisor: token growth rate analysis, not just prompt count
+- Subagent cost awareness: flags when Agent tool spawns inflate costs
+- Test coverage nudge: stronger warnings for untested source changes
+- PR size gating: pre-push diff size warnings
+
+Carried from v4.0:
 - Tiered keyword weights (not all opus keywords are equal)
 - Word boundary matching (prevents "plan" matching "explain")
 - Downgrade signals ("just", "quickly" push toward cheaper models)
@@ -86,6 +94,28 @@ DOWNGRADE_KEYWORDS = {
     'easy': 2, 'basic': 2, 'trivial': 3,
 }
 
+# v5.0: Debug keywords — these should route to Sonnet minimum
+# Debugging rarely works well on Haiku; needs reasoning but not full Opus
+DEBUG_KEYWORDS = {
+    'error': 1, 'bug': 2, 'broken': 2, 'failing': 2, 'failed': 2,
+    'stack trace': 3, 'traceback': 3, 'exception': 2, 'crash': 2,
+    'not working': 3, 'doesnt work': 3, "doesn't work": 3,
+    'undefined': 1, 'null': 1, 'segfault': 3, 'panic': 2,
+    'debug': 2, 'breakpoint': 1, 'regression': 3, 'flaky': 2,
+    'intermittent': 2, 'race condition': 3, 'deadlock': 3,
+    'memory leak': 3, 'timeout': 1, 'hang': 2, 'infinite loop': 3,
+    'wrong output': 2, 'unexpected': 1, 'off by one': 2,
+}
+
+# v5.0: Code review keywords — review tasks need structured analysis
+REVIEW_KEYWORDS = {
+    'review': 2, 'code review': 3, 'review this pr': 3,
+    'review this diff': 3, 'look over': 1, 'check my code': 2,
+    'feedback on': 1, 'critique': 2, 'pr review': 3,
+    'pull request': 2, 'merge request': 2, 'diff': 1,
+    'approve': 1, 'nits': 1, 'suggestions': 1,
+}
+
 
 # --- Pattern Loading ---
 
@@ -147,14 +177,20 @@ def analyze_keywords(prompt, patterns):
     simple_score, simple_hits = match_keyword_weighted(prompt_lower, HAIKU_KEYWORDS)
     complex_score, complex_hits = match_keyword_weighted(prompt_lower, OPUS_KEYWORDS)
     downgrade_score, downgrade_hits = match_keyword_weighted(prompt_lower, DOWNGRADE_KEYWORDS)
+    debug_score, debug_hits = match_keyword_weighted(prompt_lower, DEBUG_KEYWORDS)
+    review_score, review_hits = match_keyword_weighted(prompt_lower, REVIEW_KEYWORDS)
 
     return {
         'simple_score': simple_score,
         'complex_score': complex_score,
         'downgrade_score': downgrade_score,
+        'debug_score': debug_score,
+        'review_score': review_score,
         'simple_hits': [h[0] for h in simple_hits[:3]],
         'complex_hits': [h[0] for h in complex_hits[:3]],
         'downgrade_hits': [h[0] for h in downgrade_hits[:3]],
+        'debug_hits': [h[0] for h in debug_hits[:3]],
+        'review_hits': [h[0] for h in review_hits[:3]],
     }
 
 
@@ -250,18 +286,30 @@ def analyze_conversation_depth(prompt):
 def score_and_recommend(analysis):
     """Combine all factors into a model recommendation.
 
-    v4.0 changes:
-    - Opus threshold raised: 10 (was 7)
-    - Haiku band widened: <= 0 (was -2)
+    v5.0 changes:
+    - Debug floor: debugging prompts can't go below Sonnet
+    - Review routing: code review prompts get Sonnet minimum for small, Opus for large
+    - Smarter compaction signal in session tracking
+
+    Carried from v4.0:
+    - Opus threshold: 10
+    - Haiku band: <= -1
     - Downgrade signals reduce score
     - Short prompt cap prevents opus for brief requests
     """
     score = 0
+    kw = analysis['keywords']
 
-    # Factor 1: Keywords (strongest signal, now weighted)
-    score += analysis['keywords']['complex_score']   # already weighted
-    score -= analysis['keywords']['simple_score']     # already weighted
-    score -= analysis['keywords']['downgrade_score']  # NEW: downgrade signals
+    # Factor 1: Keywords (strongest signal, weighted)
+    score += kw['complex_score']
+    score -= kw['simple_score']
+    score -= kw['downgrade_score']
+
+    # v5.0: Debug keywords add moderate complexity (pushes toward Sonnet)
+    score += kw['debug_score']
+
+    # v5.0: Review keywords add moderate complexity
+    score += kw['review_score']
 
     # Factor 2: Tool complexity
     tool_scores = {'high': 3, 'medium': 1, 'low': -1}
@@ -287,7 +335,23 @@ def score_and_recommend(analysis):
         score = 8  # Cap at sonnet range
         return 'sonnet', 'Short prompt capped to Sonnet', score
 
-    # Thresholds (tighter than v3.1)
+    # v5.0: Debug floor — debugging prompts never go to Haiku
+    if kw['debug_score'] >= 3 and score <= -1:
+        score = 1  # Force into Sonnet range
+        return 'sonnet', 'Debug task (Sonnet floor)', score
+
+    # v5.0: Review routing — code reviews need at least Sonnet
+    if kw['review_score'] >= 3 and score <= -1:
+        score = 1
+        return 'sonnet', 'Code review (Sonnet floor)', score
+
+    # v5.0: Large review + many files → Opus
+    if kw['review_score'] >= 3 and analysis['file_context'] in ('many_files',) and analysis['inference_depth'] == 'deep':
+        if score < 10:
+            score = 10
+        return 'opus', 'Large code review — deep multi-file analysis', score
+
+    # Thresholds
     if score >= 10:
         return 'opus', 'Complex reasoning, multi-step planning', score
     elif score <= -1:
@@ -502,6 +566,61 @@ def track_session_depth():
         return 0, 0, None
 
 
+def analyze_compaction_need(session_data):
+    """v5.0: Smart compaction advisor — analyzes WHY context is bloated.
+
+    Returns a recommendation dict or None.
+    """
+    prompt_count = session_data.get('prompt_count', 0)
+    subagent_spawns = session_data.get('subagent_spawns', 0)
+    file_reads = session_data.get('file_reads', 0)
+    bash_calls = session_data.get('bash_calls', 0)
+
+    if prompt_count < 10:
+        return None
+
+    # Estimate context composition
+    est_context_k = round(prompt_count * EST_TOKENS_PER_TURN / 1000)
+
+    # Subagent-heavy sessions balloon fast
+    if subagent_spawns >= 3:
+        return {
+            'reason': f'{subagent_spawns} subagent spawns inflating context',
+            'action': '/compact — subagent results dominate context',
+            'severity': 'high' if subagent_spawns >= 5 else 'medium',
+            'est_context_k': est_context_k,
+        }
+
+    # File-read-heavy sessions (lots of tool output)
+    if file_reads >= 10:
+        return {
+            'reason': f'{file_reads} file reads — tool output bloating context',
+            'action': '/compact — most context is file content already read',
+            'severity': 'high' if file_reads >= 20 else 'medium',
+            'est_context_k': est_context_k,
+        }
+
+    # Long sessions with lots of bash output
+    if bash_calls >= 15:
+        return {
+            'reason': f'{bash_calls} bash commands — terminal output in context',
+            'action': '/compact or start fresh',
+            'severity': 'medium',
+            'est_context_k': est_context_k,
+        }
+
+    # General depth warning
+    if prompt_count >= 20:
+        return {
+            'reason': f'{prompt_count} prompts deep — context growing',
+            'action': '/compact to reduce cache write costs',
+            'severity': 'medium' if prompt_count < 30 else 'high',
+            'est_context_k': est_context_k,
+        }
+
+    return None
+
+
 def cleanup_stale_sessions():
     """Remove session files older than 24 hours (runs occasionally)."""
     try:
@@ -562,11 +681,12 @@ def main():
         output_lines = [
             '',
             '+---------------------------------------------------------+',
-            '|  Model Router v4.0 - Cost Optimization                  |',
+            '|  Model Router v5.0 - Cost Optimization                  |',
             '+---------------------------------------------------------+',
             '',
             f'  Analysis:',
             f'    Keywords: Simple={kw["simple_score"]} Complex={kw["complex_score"]} Downgrade={kw["downgrade_score"]}',
+            f'    Debug={kw["debug_score"]} Review={kw["review_score"]}',
             f'    Tool Complexity: {analysis["tool_complexity"].upper()}',
             f'    File Context: {analysis["file_context"]}',
             f'    Inference Depth: {analysis["inference_depth"].upper()}',
@@ -605,6 +725,24 @@ def main():
         elif session_depth > 0:
             est_k = round(est_context / 1000)
             output_lines.append(f'  Session: {session_depth} prompts (~{est_k}K context)')
+
+        # v5.0: Smart compaction advisor
+        try:
+            session_id = get_session_id()
+            session_file = os.path.join(SESSION_DIR, f'session_{session_id}.json')
+            if os.path.exists(session_file):
+                with open(session_file, 'r') as f:
+                    session_data = json.load(f)
+                compact_rec = analyze_compaction_need(session_data)
+                if compact_rec:
+                    sev = compact_rec['severity'].upper()
+                    output_lines += [
+                        '',
+                        f'  COMPACT [{sev}]: {compact_rec["reason"]}',
+                        f'    -> {compact_rec["action"]}',
+                    ]
+        except Exception:
+            pass
 
         # Budget alerts
         if budget_alerts:

@@ -1,12 +1,12 @@
-# Claude Model Router v4.0.1
+# Claude Model Router v5.0
 
 <p align="center">
-  <img src="model-router-v4.png" alt="Claude Model Router v4.0 - Intelligent Routing and Cost Optimization" width="700">
+  <img src="model-router-v5.png" alt="Claude Model Router v5.0 - Intelligent Routing and Cost Optimization" width="700">
 </p>
 
 <p align="center">
   <strong>The full Claude Code discipline layer.</strong><br>
-  Model routing, git hygiene enforcement, commit quality gates, session telemetry, and DX automation hooks — installed with one command.
+  Model routing, git hygiene enforcement, commit quality gates, session telemetry, subagent cost tracking, TDD nudges, PR size gating, and smart compaction — installed with one command.
 </p>
 
 <p align="center">
@@ -22,15 +22,17 @@
 ## The Problem
 
 1. Running Opus for "yes" and "looks good" burns 60x more than Haiku
-2. Long conversations silently rack up cache write costs ($2-4/prompt on Opus at 100K+ context)
-3. Claude Code injects `Co-Authored-By` and `Generated with Claude Code` into your git history
-4. No visibility into where tokens are going across projects
-5. No guardrails on commit message quality
-6. No session-level telemetry for async team handoffs
+2. Debugging tasks on Haiku waste time — too weak to reason about errors
+3. Long conversations silently rack up cache write costs ($2-4/prompt on Opus at 100K+ context)
+4. Claude Code injects `Co-Authored-By` and `Generated with Claude Code` into your git history
+5. No visibility into where tokens are going across projects
+6. Subagent spawns are the hidden cost killer — no tracking or warnings
+7. No guardrails on PR size, commit quality, or test coverage
+8. No session-level telemetry for async team handoffs
 
 ## The Fix
 
-v4 is a single install that covers all six. Model routing uses tiered keyword weights, word boundary matching, and downgrade signals to aggressively route simple tasks to Haiku. Git hooks strip AI trailers before they hit your history. Conventional commit gates enforce message quality. Session summaries log what happened. All of it stacks with `/fast` mode.
+v5 covers all eight. Model routing uses tiered keyword weights, debug/review-aware routing, and downgrade signals to aggressively route simple tasks to Haiku while enforcing Sonnet minimums for debugging and code review. Git hooks strip AI trailers and gate PR size. PostToolUse tracks subagent spawns and nudges TDD. Smart compaction tells you *why* your context is bloated — not just that it is. All of it stacks with `/fast` mode.
 
 ---
 
@@ -56,23 +58,24 @@ cd claude-model-router
 
 ### 1. Model Routing (UserPromptSubmit)
 
-Every prompt scored across 5 factors with tiered keyword weights, word boundary matching, and downgrade signal detection. Short follow-ups auto-route to Haiku. v4.0 adds savings tracking vs an all-Opus baseline.
+Every prompt scored across 7 factors with tiered keyword weights, word boundary matching, debug/review awareness, and downgrade signal detection. Short follow-ups auto-route to Haiku. Debugging and code review prompts enforce a Sonnet floor.
 
 ```
 +---------------------------------------------------------+
-|  Model Router v4.0 - Cost Optimization                  |
+|  Model Router v5.0 - Cost Optimization                  |
 +---------------------------------------------------------+
 
   Analysis:
-    Keywords: Simple=2 Complex=0 Downgrade=3
+    Keywords: Simple=0 Complex=0 Downgrade=5
+    Debug=5 Review=0
     Tool Complexity: LOW
     File Context: no_files
     Inference Depth: SHALLOW
-    Conversation: CONTINUATION
-    Score: -7
+    Conversation: FRESH
+    Score: 1
 
-  Recommendation: /model haiku
-    Reason: Short follow-up
+  Recommendation: /model sonnet
+    Reason: Debug task (Sonnet floor)
 
   Cost (per 1M input tokens):
     Haiku:  $0.25   Sonnet: $3.00   Opus: $15.00
@@ -82,12 +85,25 @@ Every prompt scored across 5 factors with tiered keyword weights, word boundary 
   Session: 8 prompts (~40K context)
 ```
 
-At deeper sessions, cache cost alerts appear automatically:
+**v5.0 routing tiers:**
+
+| Tier | Keywords | Effect |
+|------|----------|--------|
+| Debug | error, bug, stack trace, crash, race condition, etc. (28 keywords) | Sonnet floor — debugging never routes to Haiku |
+| Review | review, PR, diff, critique, etc. (15 keywords) | Sonnet floor; large multi-file reviews → Opus |
+| Complex | architect, design system, deep dive, etc. | Push toward Opus |
+| Simple | show me, what is, list, etc. | Push toward Haiku |
+| Downgrade | just, quickly, trivial, etc. | Push toward cheaper models |
+
+At deeper sessions, cache cost alerts and smart compaction recommendations appear:
 
 ```
   WARNING: Session depth: 25 prompts (~125K context)
     Cache write/prompt: Opus=$2.34  Sonnet=$0.47
     -> Cache costs growing — try /compact or start fresh
+
+  COMPACT [HIGH]: 5 subagent spawns inflating context
+    -> /compact — subagent results dominate context
 ```
 
 ### 2. Git Hygiene (commit-msg, prepare-commit-msg, pre-push)
@@ -105,9 +121,11 @@ Three git hooks working together to keep your history clean:
 - Hints when past tense is used ("Added" -> use imperative)
 - Bypass with `--no-verify` when needed
 
-**pre-push** — last line of defense:
+**pre-push** — last line of defense + PR size gating:
 - Scans outgoing commits for leaked AI trailers (scoped to `origin/{default-branch}..HEAD` on new branches)
 - Blocks the push with a clear message showing which commits are dirty
+- **v5.0: PR size gating** — warns at 500+ lines changed, blocks at 2000+ lines with guidance to split
+- Configurable via `CLAUDE_PR_SIZE_WARN` (default: 500) and `CLAUDE_PR_SIZE_BLOCK` (default: 2000) env vars
 - Bypass with `--no-verify`
 
 Install git hooks globally or per-repo:
@@ -127,32 +145,57 @@ Fires before Bash tool calls. Catches `git commit`, `gh pr create`, and `git pus
 - Warns when AI markers are present in commit messages or PR bodies
 - Logs git push operations for audit trail
 
-### 4. PostToolUse Hook — DX Feedback
+### 4. PostToolUse Hook — DX Feedback + Subagent Tracking
 
-Fires after Write, Edit, and Bash tool calls:
-- Tracks all file changes to a log for session summary
-- Detects when a source file is modified that has a corresponding test file — reminds you to update tests
-- Logs all bash commands for session replay
+Fires after Write, Edit, Bash, Agent, Read, Glob, and Grep tool calls:
+- **Subagent cost tracking** — counts Agent tool spawns per session, warns at 3 (note) and 5+ (alert with cost guidance)
+- **TDD nudge** — when a source file is written without a corresponding test file, shows a prominent warning with suggested test filename. When tests exist, reminds you to update them
+- **File read counting** — tracks Read/Glob/Grep calls for the smart compaction advisor
+- Tracks all file changes and bash commands to logs for session summary
+
+```
+  +---------------------------------------------------------+
+  |  TDD Nudge: No test file found                         |
+  +---------------------------------------------------------+
+  Source: auth_middleware.py
+  Consider adding: auth_middleware.test.py or test_auth_middleware.py
+```
+
+```
+  +---------------------------------------------------------+
+  |  Subagent Cost Alert                                    |
+  +---------------------------------------------------------+
+  5 subagents spawned this session.
+  Each subagent creates its own context window + token costs.
+  Consider batching work or using direct tool calls instead.
+```
 
 ### 5. Stop Hook — Session Summary
 
 When Claude Code finishes a turn, auto-generates:
 ```
 +---------------------------------------------------------+
-|  Session Summary                                        |
+|  Session Summary (v5.0)                                 |
 +---------------------------------------------------------+
 
   Routing:  47 prompts (H:28 S:15 O:4)
   Est cost: $3.42 today
+  Saved:    $8.76 vs all-Opus
   Files:    12 changes tracked
   Git ops:  3 operations
+  Agents:   3 subagents spawned
+
+  Context composition:
+    File reads:  18
+    Bash calls:  9
+    Subagents:   3
 ```
 
 Appends to `~/.claude/plugins/model-router/logs/session_summary.log` for async handoffs.
 
-### 6. Session Depth Tracking + Cache Cost Alerts
+### 6. Session Depth Tracking + Smart Compaction Advisor
 
-Tracks prompt count per session and warns when cache write costs are growing. Based on real billing data showing cache writes as 47% of total spend.
+Tracks prompt count per session and warns when cache write costs are growing. v5.0 adds a smart compaction advisor that analyzes *why* your context is bloated — not just that it is.
 
 | Threshold | Level | Action |
 |-----------|-------|--------|
@@ -160,7 +203,15 @@ Tracks prompt count per session and warns when cache write costs are growing. Ba
 | 25 prompts (~125K context) | WARNING | Cache costs growing, shows $/prompt |
 | 40 prompts (~200K context) | ALERT | Start a new conversation |
 
-Shows estimated cache write cost per prompt for Opus vs Sonnet so you can see the real cost of staying in a long session.
+**Smart compaction triggers:**
+
+| Condition | Severity | Recommendation |
+|-----------|----------|----------------|
+| 5+ subagent spawns | HIGH | `/compact` — subagent results dominate context |
+| 20+ file reads | HIGH | `/compact` — file content already read |
+| 10+ file reads | MEDIUM | `/compact` — tool output bloating context |
+| 15+ bash calls | MEDIUM | `/compact` or start fresh |
+| 20+ prompts | MEDIUM-HIGH | `/compact` to reduce cache write costs |
 
 ### 7. Cost Tracking + Budget Alerts
 
@@ -220,7 +271,7 @@ Full hooks block that `--force` installs:
       { "matcher": "Bash", "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/model-router/hooks/pre_tool_use.sh" }] }
     ],
     "PostToolUse": [
-      { "matcher": "Write|Edit|Bash", "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/model-router/hooks/post_tool_use.sh" }] }
+      { "matcher": "Write|Edit|Bash|Agent|Read|Glob|Grep", "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/model-router/hooks/post_tool_use.sh" }] }
     ],
     "Stop": [
       { "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/model-router/hooks/stop_hook.sh" }] }
@@ -237,7 +288,7 @@ Full hooks block that `--force` installs:
 ./test_hook.sh
 ```
 
-21 tests covering routing accuracy, cost reports, git trailer stripping, conventional commit enforcement, past tense detection, and all Claude Code hooks.
+Test suite covering routing accuracy (including debug/review tiers), cost reports, git trailer stripping, conventional commit enforcement, past tense detection, subagent tracking, PR size gating, and all Claude Code hooks.
 
 ---
 
@@ -251,18 +302,18 @@ claude-model-router/
 ├── plugin/
 │   ├── plugin.json
 │   ├── hooks/
-│   │   ├── model_router.py        # 6-factor routing engine + session tracking
+│   │   ├── model_router.py        # 7-factor routing engine + session tracking + smart compaction
 │   │   ├── cost_report.py         # Cost report generator
 │   │   ├── pre_tool_use.sh        # Git command interception
-│   │   ├── post_tool_use.sh       # File change tracking + test reminders
+│   │   ├── post_tool_use.sh       # File change tracking + test nudge + subagent tracking
 │   │   └── stop_hook.sh           # Session summary generator
 │   └── config/
-│       ├── patterns.json          # Routing keywords (with healthcare)
+│       ├── patterns.json          # Routing keywords (with healthcare, debug, review tiers)
 │       └── budget.json            # Daily/weekly limits
 ├── git-hooks/
 │   ├── prepare-commit-msg         # Strip AI trailers before editor
 │   ├── commit-msg                 # Conventional commit + final trailer strip
-│   └── pre-push                   # Block pushes with leaked AI trailers
+│   └── pre-push                   # Block pushes with leaked AI trailers + PR size gating
 ├── agents/
 │   └── router-advisor.md          # Model selection subagent
 ├── commands/
@@ -276,6 +327,7 @@ claude-model-router/
 
 ## Version History
 
+- **v5.0.0** - Debug keyword tier (28 keywords, Sonnet floor for debugging), code review routing (15 keywords, Sonnet floor + Opus for large reviews), subagent cost tracking (warns at 3/5+ spawns), TDD nudge (missing test file warnings with suggested filenames), PR size gating (configurable warn/block thresholds), smart compaction advisor (analyzes why context is bloated — subagents, file reads, bash output), enhanced session summary with savings and context composition breakdown, PostToolUse matcher expanded to Agent|Read|Glob|Grep
 - **v4.0.1** - Fix pre-push hook scanning entire git history on new branches — now scopes to `origin/{main,master}..HEAD` instead of walking all reachable commits; fix awk SHA parsing in blocked-commit listing
 - **v4.0.0** - Tiered keyword weights (1-4 pts by signal strength), word boundary regex matching, downgrade signals ("just", "quickly", "trivial"), stricter opus threshold (10 vs 7), wider haiku band (score <= -1), short prompt cap (<60 chars can't trigger opus), expanded continuation detection (35+ phrases), savings tracking vs all-opus baseline, session depth tracking with cache cost alerts at 15/25/40 prompt thresholds
 - **v3.1.0** - Token-weighted cost estimates (prompt length / 4 + context overhead), per-row Opus baseline calculation, backward-compatible CSV format, honest savings metrics

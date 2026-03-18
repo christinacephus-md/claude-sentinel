@@ -19,13 +19,21 @@
     "audit logging", "data governance", "privacy", "gdpr",
     "from the ground up"
   ],
-  "downgrade_keywords": [
-    "just", "quickly", "briefly", "simply", "only", "small",
-    "minor", "tiny", "tweak", "fix this", "change this",
-    "update this", "add this", "real quick", "one thing",
-    "straightforward", "easy", "basic", "trivial"
+  "debug_keywords": [
+    "error", "bug", "broken", "failing", "failed", "stack trace",
+    "traceback", "exception", "crash", "not working", "doesnt work",
+    "doesn't work", "undefined", "null", "segfault", "panic",
+    "debug", "regression", "flaky", "intermittent", "race condition",
+    "deadlock", "memory leak", "timeout", "hang", "infinite loop",
+    "wrong output", "unexpected", "off by one"
+  ],
+  "review_keywords": [
+    "review", "code review", "review this pr", "review this diff",
+    "look over", "check my code", "feedback on", "critique",
+    "pr review", "pull request", "merge request", "diff",
+    "approve", "nits", "suggestions"
   ],
   "sonnet_default": true,
-  "_version": "4.0",
-  "_note": "Keywords are now weighted in model_router.py. This file serves as reference and for project overlays."
+  "_version": "5.0",
+  "_note": "Keywords are weighted in model_router.py. This file serves as reference and for project overlays. v5.0 adds debug and review keyword tiers."
 }

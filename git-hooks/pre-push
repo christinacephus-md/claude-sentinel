@@ -1,11 +1,17 @@
 #!/bin/bash
-# Claude Model Router v3 - pre-push hook
+# Claude Model Router v5.0 - pre-push hook
 # Last line of defense: scan outgoing commits for AI trailers that slipped through.
+# v5.0: PR size gating — warn about oversized diffs before push.
 
 remote="$1"
 url="$2"
 
 FOUND=0
+
+# --- v5.0: PR Size Gating ---
+# Configurable thresholds (lines changed)
+PR_SIZE_WARN=${CLAUDE_PR_SIZE_WARN:-500}
+PR_SIZE_BLOCK=${CLAUDE_PR_SIZE_BLOCK:-2000}
 
 while read local_ref local_sha remote_ref remote_sha; do
   # Skip delete pushes
@@ -27,14 +33,46 @@ while read local_ref local_sha remote_ref remote_sha; do
     if [ -n "$DEFAULT_BRANCH" ]; then
       RANGE="origin/${DEFAULT_BRANCH}..${local_sha}"
     else
-      echo "  Warning: Could not determine default branch. Skipping AI trailer scan."
+      echo "  Warning: Could not determine default branch. Skipping scans."
       continue
     fi
   else
     RANGE="$remote_sha..$local_sha"
   fi
 
-  # Scan commit messages in the push range
+  # --- v5.0: Check diff size ---
+  DIFF_STATS=$(git diff --shortstat "$RANGE" 2>/dev/null)
+  if [ -n "$DIFF_STATS" ]; then
+    # Extract insertions and deletions
+    INSERTIONS=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || echo "0")
+    DELETIONS=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ deletion' | grep -oE '[0-9]+' || echo "0")
+    TOTAL_CHANGED=$((${INSERTIONS:-0} + ${DELETIONS:-0}))
+    FILES_CHANGED=$(echo "$DIFF_STATS" | grep -oE '[0-9]+ file' | grep -oE '[0-9]+' || echo "0")
+
+    if [ "$TOTAL_CHANGED" -ge "$PR_SIZE_BLOCK" ]; then
+      echo ""
+      echo "  +---------------------------------------------------------+"
+      echo "  |  PR Size Warning: VERY LARGE DIFF                      |"
+      echo "  +---------------------------------------------------------+"
+      echo ""
+      echo "  $DIFF_STATS"
+      echo "  Total lines changed: $TOTAL_CHANGED (threshold: $PR_SIZE_BLOCK)"
+      echo ""
+      echo "  Consider splitting into smaller PRs for easier review."
+      echo "  Large PRs have higher defect rates and slower review cycles."
+      echo ""
+      echo "  To push anyway: git push --no-verify"
+      echo ""
+      FOUND=1
+    elif [ "$TOTAL_CHANGED" -ge "$PR_SIZE_WARN" ]; then
+      echo ""
+      echo "  PR Size Note: ${TOTAL_CHANGED} lines changed across ${FILES_CHANGED:-?} files."
+      echo "  Consider whether this could be split into smaller PRs."
+      echo ""
+    fi
+  fi
+
+  # --- Scan commit messages for AI trailers ---
   LEAKED=$(git log --format="%H %s%n%b" "$RANGE" 2>/dev/null | grep -iE \
     "co-authored-by.*claude|generated.with.*claude|noreply@anthropic" || true)
 

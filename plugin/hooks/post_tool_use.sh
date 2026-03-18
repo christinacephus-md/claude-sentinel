@@ -1,6 +1,7 @@
 #!/bin/bash
-# Claude Model Router v3 - PostToolUse hook
+# Claude Model Router v5.0 - PostToolUse hook
 # DX feedback loops after tool execution.
+# v5.0: subagent cost tracking, stronger test nudge
 
 INPUT=$(cat)
 
@@ -9,7 +10,77 @@ TOOL_INPUT=$(echo "$INPUT" | python3 -c "import sys,json; print(json.dumps(json.
 
 ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/model-router}"
 LOG_DIR="$ROUTER_HOME/logs"
-mkdir -p "$LOG_DIR"
+SESSION_DIR="$ROUTER_HOME/logs/sessions"
+mkdir -p "$LOG_DIR" "$SESSION_DIR"
+
+# --- Helper: get session file ---
+get_session_file() {
+  SESSION_ID="${CLAUDE_SESSION_ID:-$$}"
+  echo "$SESSION_DIR/session_${SESSION_ID}.json"
+}
+
+# --- Helper: increment session counter ---
+increment_session_counter() {
+  local COUNTER_NAME="$1"
+  local SESSION_FILE
+  SESSION_FILE=$(get_session_file)
+
+  python3 -c "
+import json, os, sys
+sf = sys.argv[1]
+key = sys.argv[2]
+data = {}
+if os.path.exists(sf):
+    with open(sf, 'r') as f:
+        data = json.load(f)
+data[key] = data.get(key, 0) + 1
+with open(sf, 'w') as f:
+    json.dump(data, f)
+" "$SESSION_FILE" "$COUNTER_NAME" 2>/dev/null
+}
+
+# --- v5.0: Track subagent spawns (the hidden cost killer) ---
+if [ "$TOOL_NAME" = "Agent" ]; then
+  increment_session_counter "subagent_spawns"
+
+  SUBAGENT_TYPE=$(echo "$TOOL_INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('subagent_type','general-purpose'))" 2>/dev/null)
+  DESCRIPTION=$(echo "$TOOL_INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('description',''))" 2>/dev/null)
+
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | Agent | type=$SUBAGENT_TYPE | $DESCRIPTION" >> "$LOG_DIR/file_changes.log"
+
+  # Check how many subagents this session has spawned
+  SESSION_FILE=$(get_session_file)
+  SPAWN_COUNT=$(python3 -c "
+import json, os, sys
+sf = sys.argv[1]
+if os.path.exists(sf):
+    with open(sf, 'r') as f:
+        data = json.load(f)
+    print(data.get('subagent_spawns', 0))
+else:
+    print(0)
+" "$SESSION_FILE" 2>/dev/null)
+
+  if [ "$SPAWN_COUNT" -ge 5 ]; then
+    echo "" >&2
+    echo "  +---------------------------------------------------------+" >&2
+    echo "  |  Subagent Cost Alert                                    |" >&2
+    echo "  +---------------------------------------------------------+" >&2
+    echo "  $SPAWN_COUNT subagents spawned this session." >&2
+    echo "  Each subagent creates its own context window + token costs." >&2
+    echo "  Consider batching work or using direct tool calls instead." >&2
+    echo "" >&2
+  elif [ "$SPAWN_COUNT" -ge 3 ]; then
+    echo "" >&2
+    echo "  Note: $SPAWN_COUNT subagents spawned this session (each has its own cost)." >&2
+    echo "" >&2
+  fi
+fi
+
+# --- Track file reads for compaction advisor ---
+if [ "$TOOL_NAME" = "Read" ] || [ "$TOOL_NAME" = "Glob" ] || [ "$TOOL_NAME" = "Grep" ]; then
+  increment_session_counter "file_reads"
+fi
 
 # --- Track file writes for test coverage reminders ---
 if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
@@ -19,17 +90,25 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
     # Log the file change
     echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | $TOOL_NAME | $FILE_PATH" >> "$LOG_DIR/file_changes.log"
 
-    # Check if source file was changed without corresponding test
+    # v5.0: Stronger test coverage nudge
     case "$FILE_PATH" in
-      *.test.* | *.spec.* | *_test.* | *_spec.*) ;;  # Test file, skip
-      *.ts | *.tsx | *.js | *.jsx | *.py | *.go)
-        # Check if a test file exists for this source
+      *.test.* | *.spec.* | *_test.* | *_spec.* | *__tests__/*) ;;  # Test file, skip
+      *.ts | *.tsx | *.js | *.jsx | *.py | *.go | *.rs | *.rb)
         DIR=$(dirname "$FILE_PATH")
         BASE=$(basename "$FILE_PATH" | sed -E 's/\.[^.]+$//')
         EXT=$(basename "$FILE_PATH" | sed -E 's/.*\.//')
 
         TEST_EXISTS=0
-        for pattern in "${DIR}/${BASE}.test.${EXT}" "${DIR}/${BASE}.spec.${EXT}" "${DIR}/${BASE}_test.${EXT}" "${DIR}/__tests__/${BASE}.test.${EXT}"; do
+        for pattern in \
+          "${DIR}/${BASE}.test.${EXT}" \
+          "${DIR}/${BASE}.spec.${EXT}" \
+          "${DIR}/${BASE}_test.${EXT}" \
+          "${DIR}/__tests__/${BASE}.test.${EXT}" \
+          "${DIR}/__tests__/${BASE}.spec.${EXT}" \
+          "${DIR}/test_${BASE}.${EXT}" \
+          "${DIR}/tests/test_${BASE}.${EXT}" \
+          "${DIR}/../tests/${BASE}_test.${EXT}" \
+          "${DIR}/../test/${BASE}_test.${EXT}"; do
           if [ -f "$pattern" ]; then
             TEST_EXISTS=1
             break
@@ -38,8 +117,16 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
 
         if [ "$TEST_EXISTS" -eq 1 ]; then
           echo ""
-          echo "  Note: $(basename "$FILE_PATH") has a corresponding test file."
-          echo "  Consider updating tests if behavior changed."
+          echo "  TDD: $(basename "$FILE_PATH") has tests — update them if behavior changed."
+          echo ""
+        else
+          # v5.0: Stronger nudge for missing tests
+          echo ""
+          echo "  +---------------------------------------------------------+"
+          echo "  |  TDD Nudge: No test file found                         |"
+          echo "  +---------------------------------------------------------+"
+          echo "  Source: $(basename "$FILE_PATH")"
+          echo "  Consider adding: ${BASE}.test.${EXT} or test_${BASE}.${EXT}"
           echo ""
         fi
         ;;
@@ -47,12 +134,13 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
   fi
 fi
 
-# --- Track slow Bash commands ---
+# --- Track Bash commands ---
 if [ "$TOOL_NAME" = "Bash" ]; then
   COMMAND=$(echo "$TOOL_INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('command',''))" 2>/dev/null)
 
-  # Log all bash commands with timestamps for session summary
   echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | bash | $COMMAND" >> "$LOG_DIR/session_commands.log"
+
+  increment_session_counter "bash_calls"
 fi
 
 exit 0

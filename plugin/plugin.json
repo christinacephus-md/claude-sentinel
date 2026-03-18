@@ -1,7 +1,7 @@
 {
   "name": "model-router",
-  "version": "4.0.1",
-  "description": "Claude Code discipline layer — model routing, cost tracking, git hygiene, session telemetry",
+  "version": "5.0.0",
+  "description": "Claude Code discipline layer — model routing, cost tracking, git hygiene, session telemetry, TDD nudge, subagent awareness, PR size gating",
   "author": "Christina Cephus",
   "hooks": {
     "UserPromptSubmit": "hooks/model_router.py",
@@ -19,5 +19,17 @@
     "cost_report": "hooks/cost_report.py",
     "agents": ["agents/router-advisor.md"],
     "commands": ["commands/cost-report.md", "commands/budget-check.md"]
+  },
+  "v5_skills": {
+    "debug_routing": "Debug keyword tier — Sonnet minimum for debugging tasks",
+    "code_review_routing": "Review keyword tier — appropriate model for code review complexity",
+    "subagent_tracking": "PostToolUse tracks Agent tool spawns and warns on cost",
+    "tdd_nudge": "Stronger test file coverage warnings for source changes",
+    "pr_size_gating": "Pre-push diff size warnings with configurable thresholds",
+    "smart_compaction": "Context growth analysis with targeted /compact recommendations"
+  },
+  "config": {
+    "pr_size_warn": "CLAUDE_PR_SIZE_WARN env var (default: 500 lines)",
+    "pr_size_block": "CLAUDE_PR_SIZE_BLOCK env var (default: 2000 lines)"
   }
 }
