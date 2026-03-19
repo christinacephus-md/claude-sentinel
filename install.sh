@@ -11,7 +11,7 @@
 
 set -e
 
-VERSION="3.0.0"
+VERSION="5.0.0"
 PLUGIN_DIR="$HOME/.claude/plugins/model-router"
 SETTINGS="$HOME/.claude/settings.json"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -131,7 +131,7 @@ HOOKS_JSON='{
   ],
   "PostToolUse": [
     {
-      "matcher": "Write|Edit|Bash",
+      "matcher": "Write|Edit|Bash|Agent|Read|Glob|Grep",
       "hooks": [
         {
           "type": "command",

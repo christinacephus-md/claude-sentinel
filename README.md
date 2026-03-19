@@ -298,7 +298,8 @@ Test suite covering routing accuracy (including debug/review tiers), cost report
 claude-model-router/
 ├── install.sh                     # One-command install (--force, --git-hooks, --update, --all)
 ├── uninstall.sh                   # Clean removal (preserves logs)
-├── test_hook.sh                   # 21-test suite
+├── test_hook.sh                   # Test suite with SDLC-5 sign-off log
+├── VALIDATION.md                  # SDLC-6: UAT checklist
 ├── plugin/
 │   ├── plugin.json
 │   ├── hooks/
@@ -323,7 +324,30 @@ claude-model-router/
 │   ├── custom_patterns.json
 │   └── healthcare_patterns.json
 └── docs/
+    ├── ISSUES.md                  # SDLC-10: Issues register with resolution tracking
+    └── ACCESS.md                  # SDLC-12: Role matrix + segregation of duties
 ```
+
+## ITGC-SDLC Compliance
+
+The model router is engineered to satisfy ITGC SDLC controls. Full compliance documentation:
+
+| Control | Name | Document |
+|---------|------|----------|
+| SDLC-1 | Overview / Specs | `README.md`, `plugin.json` |
+| SDLC-2 | Pre-Dev Approval | `CONTRIBUTING.md` (PR workflow) |
+| SDLC-3 | Project Governance | `README.md` (version history), git log |
+| SDLC-4 | System Changes | `commit-msg` hook (conventional commits), `cost_log.csv` |
+| SDLC-5 | IT Testing | `test_hook.sh` with sign-off log (`logs/test_results.log`) |
+| SDLC-6 | User Acceptance Testing | `VALIDATION.md` (UAT checklist) |
+| SDLC-7 | Data Conversion | `install.sh --update` (config preservation + backup) |
+| SDLC-8 | Reports | `cost_report.py`, `stop_hook.sh` (session summaries) |
+| SDLC-9 | Interfaces | `plugin.json`, `settings.json` reference block |
+| SDLC-10 | Issues Log | `docs/ISSUES.md` (issues register) |
+| SDLC-11 | Pre-Migration Approval | `pre-push` hook (go-live gate) |
+| SDLC-12 | Access Security | `docs/ACCESS.md` (role matrix + SoD) |
+
+---
 
 ## Version History
 
