@@ -1,7 +1,7 @@
 # Claude Sentinel v5.0
 
 <p align="center">
-  <img src="CMR5.0.png" alt="Claude Sentinel v5.0 - Intelligent Routing and Cost Optimization" width="700">
+  <img src="Sentinel.png" alt="Claude Sentinel v5.0 - Developer Discipline Layer" width="700">
 </p>
 
 <p align="center">
@@ -14,8 +14,106 @@
   <a href="#what-you-get">Features</a> &bull;
   <a href="#git-hygiene">Git Hygiene</a> &bull;
   <a href="#claude-code-hooks">Hooks</a> &bull;
-  <a href="#cost-tracking">Cost Tracking</a>
+  <a href="#cost-tracking">Cost Tracking</a> &bull;
+  <a href="#enterprise-architecture">Enterprise Architecture</a>
 </p>
+
+---
+
+## Enterprise Architecture
+
+How Sentinel integrates across the LifeMD engineering organization:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    LifeMD Engineering Organization                  │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
+│  │  Engineer A   │  │  Engineer B   │  │  Engineer C   │   ...      │
+│  │  (ai-relay)   │  │  (billing)    │  │  (frontend)   │            │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘              │
+│         │                  │                  │                      │
+│         └──────────────────┼──────────────────┘                     │
+│                            │                                        │
+│                   ┌────────▼────────┐                               │
+│                   │  Claude Code    │                                │
+│                   │  (any session)  │                                │
+│                   └────────┬────────┘                                │
+│                            │                                        │
+│  ┌─────────────────────────▼─────────────────────────────────┐      │
+│  │              CLAUDE SENTINEL v5.0                          │      │
+│  │           ~/.claude/plugins/sentinel/                      │      │
+│  ├────────────────────────────────────────────────────────────┤      │
+│  │                                                            │      │
+│  │  ┌─────────────────┐  ┌──────────────────┐                │      │
+│  │  │ UserPromptSubmit │  │   PreToolUse     │                │      │
+│  │  │ ─────────────── │  │ ──────────────── │                │      │
+│  │  │ • Cost scoring   │  │ • Git command    │                │      │
+│  │  │ • Debug routing  │  │   interception   │                │      │
+│  │  │ • Review routing │  │ • AI trailer     │                │      │
+│  │  │ • Session depth  │  │   stripping      │                │      │
+│  │  │ • Budget alerts  │  │ • PR body        │                │      │
+│  │  │ • Compaction     │  │   validation     │                │      │
+│  │  │   advisor        │  │                  │                │      │
+│  │  └─────────────────┘  └──────────────────┘                │      │
+│  │                                                            │      │
+│  │  ┌─────────────────┐  ┌──────────────────┐                │      │
+│  │  │  PostToolUse     │  │     Stop         │                │      │
+│  │  │ ──────────────── │  │ ──────────────── │                │      │
+│  │  │ • TDD nudge      │  │ • Session        │                │      │
+│  │  │ • Subagent cost  │  │   summary        │                │      │
+│  │  │   tracking       │  │ • Savings        │                │      │
+│  │  │ • File read      │  │   report         │                │      │
+│  │  │   counting       │  │ • Context        │                │      │
+│  │  │ • Bash command   │  │   composition    │                │      │
+│  │  │   logging        │  │                  │                │      │
+│  │  └─────────────────┘  └──────────────────┘                │      │
+│  │                                                            │      │
+│  │  ┌──────────────────────────────────────────┐             │      │
+│  │  │           Git Hooks (Global)              │             │      │
+│  │  │ ──────────────────────────────────────── │             │      │
+│  │  │ • prepare-commit-msg: strip AI trailers   │             │      │
+│  │  │ • commit-msg: conventional commit gate    │             │      │
+│  │  │ • pre-push: AI trailer scan + PR size     │             │      │
+│  │  └──────────────────────────────────────────┘             │      │
+│  └────────────────────────────────────────────────────────────┘      │
+│                            │                                        │
+│              ┌─────────────▼─────────────────┐                      │
+│              │         Outputs                │                      │
+│              ├───────────────────────────────┤                      │
+│              │ • cost_log.csv (every prompt)  │                      │
+│              │ • session_summary.log          │                      │
+│              │ • test_results.log (SDLC-5)    │                      │
+│              │ • file_changes.log             │                      │
+│              │ • git_operations.log           │                      │
+│              └─────────────┬─────────────────┘                      │
+│                            │                                        │
+│  ┌─────────────────────────▼─────────────────────────────────┐      │
+│  │              Enterprise Benefits                           │      │
+│  ├────────────────────────────────────────────────────────────┤      │
+│  │                                                            │      │
+│  │  COST GOVERNANCE          COMPLIANCE (ITGC-SDLC)          │      │
+│  │  ├─ 80%+ savings vs       ├─ 12/12 controls satisfied    │      │
+│  │  │  all-Opus baseline      ├─ Automated test sign-off     │      │
+│  │  ├─ Budget alerts at       ├─ UAT checklist (VALIDATION)  │      │
+│  │  │  80% threshold          ├─ Issues register (ISSUES)    │      │
+│  │  ├─ Per-project cost       └─ Role matrix (ACCESS)        │      │
+│  │  │  attribution                                           │      │
+│  │  └─ Session depth                                         │      │
+│  │     warnings               CODE QUALITY                   │      │
+│  │                            ├─ Conventional commits        │      │
+│  │  SECURITY                  ├─ TDD enforcement             │      │
+│  │  ├─ AI attribution         ├─ PR size gating              │      │
+│  │  │  stripped (3 layers)    ├─ Subagent cost awareness     │      │
+│  │  ├─ PHI pattern scanning   └─ Smart compaction            │      │
+│  │  ├─ No third-party deps                                   │      │
+│  │  └─ Hook bypass audit                                     │      │
+│  │     trail                                                 │      │
+│  └────────────────────────────────────────────────────────────┘      │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
