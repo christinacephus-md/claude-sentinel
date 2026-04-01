@@ -2,7 +2,7 @@
 
 **ITGC-SDLC-10: Issues Log**
 
-All issues identified during development, testing, or production must be logged here with resolution tracking. Issues are also tracked in [GitHub Issues](https://github.com/christinacephus-md/claude-model-router/issues).
+All issues identified during development, testing, or production must be logged here with resolution tracking. Issues are also tracked in [GitHub Issues](https://github.com/christinacephus-md/claude-sentinel/issues).
 
 ---
 

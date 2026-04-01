@@ -2,7 +2,7 @@
 
 **ITGC-SDLC-6: User Acceptance Testing**
 
-This checklist validates that the Claude Model Router is functioning correctly after installation or upgrade. Complete all items and sign off at the bottom.
+This checklist validates that the Claude Sentinel is functioning correctly after installation or upgrade. Complete all items and sign off at the bottom.
 
 ---
 
@@ -12,8 +12,8 @@ This checklist validates that the Claude Model Router is functioning correctly a
 |---|-------|--------|
 | 1 | Python 3 installed: `python3 --version` | [ ] |
 | 2 | Claude Code installed: `claude --version` | [ ] |
-| 3 | Plugin files present: `ls ~/.claude/plugins/model-router/hooks/` | [ ] |
-| 4 | Settings wired: `grep model_router ~/.claude/settings.json` | [ ] |
+| 3 | Plugin files present: `ls ~/.claude/plugins/sentinel/hooks/` | [ ] |
+| 4 | Settings wired: `grep sentinel ~/.claude/settings.json` | [ ] |
 
 ## Core Routing Validation
 
@@ -53,8 +53,8 @@ Open a new Claude Code session and verify each scenario:
 
 | # | Check | How to Verify | Pass? |
 |---|-------|---------------|-------|
-| 22 | Cost log populates | `wc -l ~/.claude/plugins/model-router/logs/cost_log.csv` | [ ] |
-| 23 | Cost report runs | `python3 ~/.claude/plugins/model-router/hooks/cost_report.py` | [ ] |
+| 22 | Cost log populates | `wc -l ~/.claude/plugins/sentinel/logs/cost_log.csv` | [ ] |
+| 23 | Cost report runs | `python3 ~/.claude/plugins/sentinel/hooks/cost_report.py` | [ ] |
 | 24 | Budget alerts | Set low daily_limit in budget.json, verify alert appears | [ ] |
 
 ## Automated Test Suite

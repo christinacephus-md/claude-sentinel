@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/model_router.py"
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sentinel.py"
           }
         ]
       }

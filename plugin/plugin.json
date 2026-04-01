@@ -1,10 +1,10 @@
 {
-  "name": "model-router",
+  "name": "sentinel",
   "version": "5.0.0",
   "description": "Claude Code discipline layer — model routing, cost tracking, git hygiene, session telemetry, TDD nudge, subagent awareness, PR size gating",
   "author": "Christina Cephus",
   "hooks": {
-    "UserPromptSubmit": "hooks/model_router.py",
+    "UserPromptSubmit": "hooks/sentinel.py",
     "PreToolUse": "hooks/pre_tool_use.sh",
     "PostToolUse": "hooks/post_tool_use.sh",
     "Stop": "hooks/stop_hook.sh"
@@ -15,7 +15,7 @@
     "git-hooks/pre-push"
   ],
   "components": {
-    "routing": "hooks/model_router.py",
+    "routing": "hooks/sentinel.py",
     "cost_report": "hooks/cost_report.py",
     "agents": ["agents/router-advisor.md"],
     "commands": ["commands/cost-report.md", "commands/budget-check.md"]

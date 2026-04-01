@@ -1,9 +1,9 @@
 #!/bin/bash
-# Claude Model Router v5.0 - Stop hook
+# Claude Sentinel v5.0 - Stop hook
 # Generates a session summary when Claude Code finishes a conversation turn.
 # v5.0: Smart compaction advisor, subagent cost summary
 
-ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/model-router}"
+ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/sentinel}"
 LOG_DIR="$ROUTER_HOME/logs"
 COST_LOG="$LOG_DIR/cost_log.csv"
 SESSION_LOG="$LOG_DIR/session_summary.log"

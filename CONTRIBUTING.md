@@ -1,4 +1,4 @@
-# Contributing to Claude Model Router
+# Contributing to Claude Sentinel
 
 Thanks for your interest in contributing! This guide will help you get started.
 
@@ -6,8 +6,8 @@ Thanks for your interest in contributing! This guide will help you get started.
 
 1. **Fork the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/claude-model-router.git
-   cd claude-model-router
+   git clone https://github.com/YOUR_USERNAME/claude-sentinel.git
+   cd claude-sentinel
    ```
 
 2. **Create a branch**
@@ -44,13 +44,13 @@ Before submitting, ensure:
 
 ```bash
 # Hook runs without errors
-echo '{"prompt":"test"}' | python3 plugin/hooks/model_router.py
+echo '{"prompt":"test"}' | python3 plugin/hooks/sentinel.py
 
 # All test cases pass
 ./test_hook.sh
 
 # No Python syntax errors
-python3 -m py_compile plugin/hooks/model_router.py
+python3 -m py_compile plugin/hooks/sentinel.py
 
 # JSON is valid
 python3 -m json.tool plugin/config/patterns.json > /dev/null
@@ -97,7 +97,7 @@ Files to update:
 
 ### Adding a New Scoring Factor
 
-1. Add analysis function to `model_router.py`:
+1. Add analysis function to `sentinel.py`:
    ```python
    def analyze_new_factor(prompt):
        """Your new factor description"""
@@ -224,7 +224,7 @@ def doStuff(p):
 ## 🏗️ Architecture
 
 ```
-model_router.py (main script)
+sentinel.py (main script)
     ├── load_patterns() - Load keyword config
     ├── analyze_prompt_keywords() - Factor 1
     ├── analyze_tool_complexity() - Factor 2

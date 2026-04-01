@@ -6,7 +6,7 @@ description: Show model routing cost report for today, this week, or this month.
 Run the cost report script and display the results. Execute this command:
 
 ```bash
-python3 ~/.claude/plugins/model-router/hooks/cost_report.py --week --project
+python3 ~/.claude/plugins/sentinel/hooks/cost_report.py --week --project
 ```
 
 Then summarize the key findings:

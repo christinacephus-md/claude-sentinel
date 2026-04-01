@@ -2,7 +2,7 @@
 
 **ITGC-SDLC-12: Access Security**
 
-This document defines the access roles, permissions, and segregation of duties for the Claude Model Router system.
+This document defines the access roles, permissions, and segregation of duties for the Claude Sentinel system.
 
 ---
 
@@ -12,7 +12,7 @@ The model router operates across four access layers:
 
 ```
 Layer 1: Claude Code Hooks (settings.json)
-  └─ UserPromptSubmit  → model_router.py   [read-only: analyzes prompt, logs decision]
+  └─ UserPromptSubmit  → sentinel.py   [read-only: analyzes prompt, logs decision]
   └─ PreToolUse        → pre_tool_use.sh   [modify: can alter git commands]
   └─ PostToolUse       → post_tool_use.sh  [read-only: logs activity, displays warnings]
   └─ Stop              → stop_hook.sh      [read-only: generates summary]
@@ -22,7 +22,7 @@ Layer 2: Git Hooks (core.hooksPath)
   └─ commit-msg          [gate: blocks non-conventional commits]
   └─ pre-push            [gate: blocks pushes with AI trailers or oversized diffs]
 
-Layer 3: Log Files (~/.claude/plugins/model-router/logs/)
+Layer 3: Log Files (~/.claude/plugins/sentinel/logs/)
   └─ cost_log.csv         [append-only: routing decisions]
   └─ file_changes.log     [append-only: file edit tracking]
   └─ session_commands.log  [append-only: bash command log]
@@ -31,7 +31,7 @@ Layer 3: Log Files (~/.claude/plugins/model-router/logs/)
   └─ test_results.log      [append-only: test sign-off log]
   └─ sessions/             [read-write: per-session state files]
 
-Layer 4: Configuration (~/.claude/plugins/model-router/config/)
+Layer 4: Configuration (~/.claude/plugins/sentinel/config/)
   └─ patterns.json   [read: keyword routing weights]
   └─ budget.json     [read: spending limits]
 ```
@@ -92,8 +92,8 @@ Layer 4: Configuration (~/.claude/plugins/model-router/config/)
 ### Offboarding / Removal
 
 1. Run `./uninstall.sh` (removes hooks, preserves logs)
-2. Verify: `grep model_router ~/.claude/settings.json` returns nothing
-3. Logs retained at `~/.claude/plugins/model-router/logs/` for audit
+2. Verify: `grep sentinel ~/.claude/settings.json` returns nothing
+3. Logs retained at `~/.claude/plugins/sentinel/logs/` for audit
 
 ---
 

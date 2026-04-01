@@ -1,5 +1,5 @@
 {
-  "description": "Example custom patterns - copy to ~/.claude/plugins/model-router/config/patterns.json",
+  "description": "Example custom patterns - copy to ~/.claude/plugins/sentinel/config/patterns.json",
   "haiku_keywords": [
     "typo",
     "format",

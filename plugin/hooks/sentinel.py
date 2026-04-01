@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Claude Model Router v5.0
+Claude Sentinel v5.0
 Intelligent model routing + cost tracking for Claude Code
 
 v5.0 improvements over v4.0:
@@ -34,7 +34,7 @@ from pathlib import Path
 
 ROUTER_HOME = os.environ.get(
     'CLAUDE_ROUTER_HOME',
-    os.path.expanduser('~/.claude/plugins/model-router')
+    os.path.expanduser('~/.claude/plugins/sentinel')
 )
 CONFIG_FILE = os.path.join(ROUTER_HOME, 'config', 'patterns.json')
 COST_LOG = os.path.join(ROUTER_HOME, 'logs', 'cost_log.csv')
@@ -681,7 +681,7 @@ def main():
         output_lines = [
             '',
             '+---------------------------------------------------------+',
-            '|  Model Router v5.0 - Cost Optimization                  |',
+            '|  Sentinel v5.0 - Cost Optimization                  |',
             '+---------------------------------------------------------+',
             '',
             f'  Analysis:',

@@ -1,11 +1,11 @@
 # Publishing Guide
 
-This document walks you through publishing the Model Router hook to GitHub.
+This document walks you through publishing the Sentinel hook to GitHub.
 
 ## 📁 Repository Structure
 
 ```
-claude-model-router/
+claude-sentinel/
 ├── README.md                      # Main documentation
 ├── LICENSE                        # MIT License
 ├── CONTRIBUTING.md                # Contribution guidelines
@@ -18,7 +18,7 @@ claude-model-router/
 │   ├── plugin.json               # Plugin metadata
 │   ├── hooks/
 │   │   ├── hooks.json            # Hook registration
-│   │   └── model_router.py       # Main analysis script
+│   │   └── sentinel.py       # Main analysis script
 │   └── config/
 │       └── patterns.json         # Keyword patterns
 ├── docs/
@@ -34,7 +34,7 @@ claude-model-router/
 ### Step 1: Create GitHub Repository
 
 1. Go to https://github.com/new
-2. Repository name: `claude-model-router`
+2. Repository name: `claude-sentinel`
 3. Description: "Intelligent model routing hook for Claude Code cost optimization"
 4. Public/Private: Choose based on your needs
 5. **Do NOT** initialize with README (we have one)
@@ -43,7 +43,7 @@ claude-model-router/
 ### Step 2: Initialize Git
 
 ```bash
-cd ~/Desktop/claude-model-router
+cd ~/Desktop/claude-sentinel
 
 # Initialize git
 git init
@@ -52,14 +52,14 @@ git init
 git add .
 
 # Create initial commit
-git commit -m "Initial commit: Claude Model Router Hook v1.0.0"
+git commit -m "Initial commit: Claude Sentinel Hook v1.0.0"
 ```
 
 ### Step 3: Push to GitHub
 
 ```bash
 # Add remote (replace YOUR_USERNAME)
-git remote add origin https://github.com/YOUR_USERNAME/claude-model-router.git
+git remote add origin https://github.com/YOUR_USERNAME/claude-sentinel.git
 
 # Push to main branch
 git branch -M main
@@ -94,7 +94,7 @@ git push -u origin main
 ### Email Template
 
 ```
-Subject: New Tool: Claude Model Router Hook
+Subject: New Tool: Claude Sentinel Hook
 
 Hi team,
 
@@ -102,11 +102,11 @@ I've created a hook for Claude Code that helps optimize costs by
 automatically recommending the right model (Haiku/Sonnet/Opus) based
 on task complexity.
 
-🔗 Repository: https://github.com/YOUR_USERNAME/claude-model-router
+🔗 Repository: https://github.com/YOUR_USERNAME/claude-sentinel
 
 📥 Installation: One command
-   git clone https://github.com/YOUR_USERNAME/claude-model-router.git
-   cd claude-model-router && ./install.sh
+   git clone https://github.com/YOUR_USERNAME/claude-sentinel.git
+   cd claude-sentinel && ./install.sh
 
 💰 Potential savings: Up to 35% on token costs
 
@@ -129,7 +129,7 @@ Features:
 • Customizable keyword patterns
 • Zero config needed
 
-GitHub: https://github.com/YOUR_USERNAME/claude-model-router
+GitHub: https://github.com/YOUR_USERNAME/claude-sentinel
 Install: `./install.sh` (one command)
 
 Try the healthcare example patterns if you work with patient data!
@@ -168,8 +168,8 @@ Multi-factor model routing hook for Claude Code cost optimization.
 ### 📦 Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/claude-model-router.git
-cd claude-model-router
+git clone https://github.com/YOUR_USERNAME/claude-sentinel.git
+cd claude-sentinel
 chmod +x install.sh
 ./install.sh
 ```
@@ -252,7 +252,7 @@ agg demo.cast demo.gif
 ### Add Badges
 
 ```markdown
-[![GitHub stars](https://img.shields.io/github/stars/YOUR_USERNAME/claude-model-router?style=social)](https://github.com/YOUR_USERNAME/claude-model-router/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/YOUR_USERNAME/claude-sentinel?style=social)](https://github.com/YOUR_USERNAME/claude-sentinel/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 ```
@@ -263,7 +263,7 @@ agg demo.cast demo.gif
 # Enable GitHub Pages in repo settings
 # Point to main branch /docs folder
 # Your docs will be live at:
-# https://YOUR_USERNAME.github.io/claude-model-router/
+# https://YOUR_USERNAME.github.io/claude-sentinel/
 ```
 
 ## 🤝 Community Building

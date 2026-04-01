@@ -1,9 +1,9 @@
 #!/bin/bash
-# Claude Model Router v5.0 - Test Suite
+# Claude Sentinel v5.0 - Test Suite
 # ITGC-SDLC-5: All testing documented with timestamped sign-off log
 
-PLUGIN_DIR="$HOME/.claude/plugins/model-router"
-ROUTER="$PLUGIN_DIR/hooks/model_router.py"
+PLUGIN_DIR="$HOME/.claude/plugins/sentinel"
+ROUTER="$PLUGIN_DIR/hooks/sentinel.py"
 REPORT="$PLUGIN_DIR/hooks/cost_report.py"
 PASS=0
 FAIL=0
@@ -18,7 +18,7 @@ RUN_ID="run_$(date +%s)"
 
 echo ""
 echo "+---------------------------------------------------------+"
-echo "|  Model Router v5.0 - Test Suite                         |"
+echo "|  Sentinel v5.0 - Test Suite                         |"
 echo "+---------------------------------------------------------+"
 echo ""
 echo "  Run ID:    $RUN_ID"

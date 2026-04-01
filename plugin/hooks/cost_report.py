@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Cost Report Generator for Claude Model Router v3.1
+Cost Report Generator for Claude Sentinel v3.1
 Reads the routing log and produces daily/weekly/monthly cost summaries.
 
 v3.1: Token-weighted cost estimates — uses actual prompt length to
@@ -22,11 +22,11 @@ from collections import defaultdict
 
 ROUTER_HOME = os.environ.get(
     'CLAUDE_ROUTER_HOME',
-    os.path.expanduser('~/.claude/plugins/model-router')
+    os.path.expanduser('~/.claude/plugins/sentinel')
 )
 COST_LOG = os.path.join(ROUTER_HOME, 'logs', 'cost_log.csv')
 
-# Must match model_router.py pricing
+# Must match sentinel.py pricing
 PRICING = {
     'haiku':  {'input': 0.25,  'output': 1.25},
     'sonnet': {'input': 3.00,  'output': 15.00},
@@ -39,7 +39,7 @@ PRICING_DISPLAY = {
     'opus':   '$15.00/1M',
 }
 
-# Output token estimates by model tier (matches model_router.py)
+# Output token estimates by model tier (matches sentinel.py)
 OUTPUT_TOKENS_BY_TIER = {
     'haiku':  400,
     'sonnet': 1200,

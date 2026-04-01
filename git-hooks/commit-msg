@@ -1,5 +1,5 @@
 #!/bin/bash
-# Claude Model Router v3 - commit-msg hook
+# Claude Sentinel v3 - commit-msg hook
 # Final cleanup of AI trailers + conventional commit enforcement.
 # Fires after the message is written but before the commit object is created.
 

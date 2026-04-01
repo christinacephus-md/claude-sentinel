@@ -1,5 +1,5 @@
 #!/bin/bash
-# Claude Model Router v3.0 - Installation Script
+# Claude Sentinel v3.0 - Installation Script
 # The full Claude Code discipline layer.
 #
 # Usage:
@@ -12,7 +12,7 @@
 set -e
 
 VERSION="5.0.0"
-PLUGIN_DIR="$HOME/.claude/plugins/model-router"
+PLUGIN_DIR="$HOME/.claude/plugins/sentinel"
 SETTINGS="$HOME/.claude/settings.json"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -33,7 +33,7 @@ done
 
 echo ""
 echo "+---------------------------------------------------------+"
-echo "|  Claude Model Router v${VERSION} - Installation              |"
+echo "|  Claude Sentinel v${VERSION} - Installation              |"
 echo "+---------------------------------------------------------+"
 echo ""
 
@@ -76,7 +76,7 @@ echo "  Installing core files..."
 mkdir -p "$PLUGIN_DIR"/{hooks,config,logs,agents,commands}
 
 # Core hooks (always overwrite)
-cp "$SCRIPT_DIR/plugin/hooks/model_router.py" "$PLUGIN_DIR/hooks/"
+cp "$SCRIPT_DIR/plugin/hooks/sentinel.py" "$PLUGIN_DIR/hooks/"
 cp "$SCRIPT_DIR/plugin/hooks/cost_report.py" "$PLUGIN_DIR/hooks/"
 cp "$SCRIPT_DIR/plugin/hooks/pre_tool_use.sh" "$PLUGIN_DIR/hooks/"
 cp "$SCRIPT_DIR/plugin/hooks/post_tool_use.sh" "$PLUGIN_DIR/hooks/"
@@ -113,7 +113,7 @@ HOOKS_JSON='{
       "hooks": [
         {
           "type": "command",
-          "command": "python3 ~/.claude/plugins/model-router/hooks/model_router.py"
+          "command": "python3 ~/.claude/plugins/sentinel/hooks/sentinel.py"
         }
       ]
     }
@@ -124,7 +124,7 @@ HOOKS_JSON='{
       "hooks": [
         {
           "type": "command",
-          "command": "bash ~/.claude/plugins/model-router/hooks/pre_tool_use.sh"
+          "command": "bash ~/.claude/plugins/sentinel/hooks/pre_tool_use.sh"
         }
       ]
     }
@@ -135,7 +135,7 @@ HOOKS_JSON='{
       "hooks": [
         {
           "type": "command",
-          "command": "bash ~/.claude/plugins/model-router/hooks/post_tool_use.sh"
+          "command": "bash ~/.claude/plugins/sentinel/hooks/post_tool_use.sh"
         }
       ]
     }
@@ -145,7 +145,7 @@ HOOKS_JSON='{
       "hooks": [
         {
           "type": "command",
-          "command": "bash ~/.claude/plugins/model-router/hooks/stop_hook.sh"
+          "command": "bash ~/.claude/plugins/sentinel/hooks/stop_hook.sh"
         }
       ]
     }
@@ -189,7 +189,7 @@ for hook_type, hook_entries in hooks_new.items():
     if hook_type not in settings['hooks']:
         settings['hooks'][hook_type] = hook_entries
     else:
-        # Check if model_router is already present
+        # Check if sentinel is already present
         existing = json.dumps(settings['hooks'][hook_type])
         for entry in hook_entries:
             marker = json.dumps(entry)
@@ -206,7 +206,7 @@ print('  Hooks merged into settings.json.')
 else
   # Check what's missing
   MISSING=""
-  grep -q "model_router.py" "$SETTINGS" 2>/dev/null || MISSING="$MISSING UserPromptSubmit"
+  grep -q "sentinel.py" "$SETTINGS" 2>/dev/null || MISSING="$MISSING UserPromptSubmit"
   grep -q "pre_tool_use.sh" "$SETTINGS" 2>/dev/null || MISSING="$MISSING PreToolUse"
   grep -q "post_tool_use.sh" "$SETTINGS" 2>/dev/null || MISSING="$MISSING PostToolUse"
   grep -q "stop_hook.sh" "$SETTINGS" 2>/dev/null || MISSING="$MISSING Stop"
@@ -274,7 +274,7 @@ fi
 
 echo ""
 echo "  Testing routing hook..."
-RESULT=$(echo '{"prompt":"Show me the README"}' | python3 "$PLUGIN_DIR/hooks/model_router.py" 2>&1)
+RESULT=$(echo '{"prompt":"Show me the README"}' | python3 "$PLUGIN_DIR/hooks/sentinel.py" 2>&1)
 if [ $? -eq 0 ] && echo "$RESULT" | grep -q "Recommendation"; then
   echo "  Routing hook: OK"
 else
@@ -317,11 +317,11 @@ echo "|  Installation Complete — v${VERSION}                        |"
 echo "+---------------------------------------------------------+"
 echo ""
 echo "  Installed:"
-echo "    Routing:     ~/.claude/plugins/model-router/hooks/model_router.py"
-echo "    Cost track:  ~/.claude/plugins/model-router/hooks/cost_report.py"
-echo "    PreToolUse:  ~/.claude/plugins/model-router/hooks/pre_tool_use.sh"
-echo "    PostToolUse: ~/.claude/plugins/model-router/hooks/post_tool_use.sh"
-echo "    Stop:        ~/.claude/plugins/model-router/hooks/stop_hook.sh"
+echo "    Routing:     ~/.claude/plugins/sentinel/hooks/sentinel.py"
+echo "    Cost track:  ~/.claude/plugins/sentinel/hooks/cost_report.py"
+echo "    PreToolUse:  ~/.claude/plugins/sentinel/hooks/pre_tool_use.sh"
+echo "    PostToolUse: ~/.claude/plugins/sentinel/hooks/post_tool_use.sh"
+echo "    Stop:        ~/.claude/plugins/sentinel/hooks/stop_hook.sh"
 if [ "$FLAG_GIT_HOOKS" -eq 1 ]; then
   echo "    Git hooks:   prepare-commit-msg, commit-msg, pre-push"
 fi

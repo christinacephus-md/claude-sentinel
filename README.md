@@ -1,7 +1,7 @@
-# Claude Model Router v5.0
+# Claude Sentinel v5.0
 
 <p align="center">
-  <img src="CMR5.0.png" alt="Claude Model Router v5.0 - Intelligent Routing and Cost Optimization" width="700">
+  <img src="CMR5.0.png" alt="Claude Sentinel v5.0 - Intelligent Routing and Cost Optimization" width="700">
 </p>
 
 <p align="center">
@@ -39,8 +39,8 @@ v5 covers all eight. Model routing uses tiered keyword weights, debug/review-awa
 ## Install
 
 ```bash
-git clone https://github.com/christinacephus-md/claude-model-router.git
-cd claude-model-router
+git clone https://github.com/christinacephus-md/claude-sentinel.git
+cd claude-sentinel
 
 # Core install (routing + Claude Code hooks)
 ./install.sh --force
@@ -62,7 +62,7 @@ Every prompt scored across 7 factors with tiered keyword weights, word boundary 
 
 ```
 +---------------------------------------------------------+
-|  Model Router v5.0 - Cost Optimization                  |
+|  Sentinel v5.0 - Cost Optimization                  |
 +---------------------------------------------------------+
 
   Analysis:
@@ -131,12 +131,12 @@ Three git hooks working together to keep your history clean:
 Install git hooks globally or per-repo:
 ```bash
 # Global (all repos)
-git config --global core.hooksPath ~/.claude/plugins/model-router/git-hooks
+git config --global core.hooksPath ~/.claude/plugins/sentinel/git-hooks
 
 # Per-repo
-ln -sf ~/.claude/plugins/model-router/hooks/commit-msg .git/hooks/commit-msg
-ln -sf ~/.claude/plugins/model-router/hooks/prepare-commit-msg .git/hooks/prepare-commit-msg
-ln -sf ~/.claude/plugins/model-router/hooks/pre-push .git/hooks/pre-push
+ln -sf ~/.claude/plugins/sentinel/hooks/commit-msg .git/hooks/commit-msg
+ln -sf ~/.claude/plugins/sentinel/hooks/prepare-commit-msg .git/hooks/prepare-commit-msg
+ln -sf ~/.claude/plugins/sentinel/hooks/pre-push .git/hooks/pre-push
 ```
 
 ### 3. PreToolUse Hook — Git Command Interception
@@ -191,7 +191,7 @@ When Claude Code finishes a turn, auto-generates:
     Subagents:   3
 ```
 
-Appends to `~/.claude/plugins/model-router/logs/session_summary.log` for async handoffs.
+Appends to `~/.claude/plugins/sentinel/logs/session_summary.log` for async handoffs.
 
 ### 6. Session Depth Tracking + Smart Compaction Advisor
 
@@ -217,13 +217,13 @@ Tracks prompt count per session and warns when cache write costs are growing. v5
 
 ```bash
 # Today
-python3 ~/.claude/plugins/model-router/hooks/cost_report.py
+python3 ~/.claude/plugins/sentinel/hooks/cost_report.py
 
 # This week by project
-python3 ~/.claude/plugins/model-router/hooks/cost_report.py --week --project
+python3 ~/.claude/plugins/sentinel/hooks/cost_report.py --week --project
 
 # All time
-python3 ~/.claude/plugins/model-router/hooks/cost_report.py --all
+python3 ~/.claude/plugins/sentinel/hooks/cost_report.py --all
 ```
 
 Budget alerts at 80% of daily/weekly limits. Configure in `config/budget.json`.
@@ -233,9 +233,9 @@ Budget alerts at 80% of daily/weekly limits. Configure in `config/budget.json`.
 Symlink into any project:
 ```bash
 mkdir -p .claude/agents .claude/commands
-ln -s ~/.claude/plugins/model-router/agents/router-advisor.md .claude/agents/
-ln -s ~/.claude/plugins/model-router/commands/cost-report.md .claude/commands/
-ln -s ~/.claude/plugins/model-router/commands/budget-check.md .claude/commands/
+ln -s ~/.claude/plugins/sentinel/agents/router-advisor.md .claude/agents/
+ln -s ~/.claude/plugins/sentinel/commands/cost-report.md .claude/commands/
+ln -s ~/.claude/plugins/sentinel/commands/budget-check.md .claude/commands/
 ```
 
 ---
@@ -265,16 +265,16 @@ Full hooks block that `--force` installs:
 {
   "hooks": {
     "UserPromptSubmit": [
-      { "hooks": [{ "type": "command", "command": "python3 ~/.claude/plugins/model-router/hooks/model_router.py" }] }
+      { "hooks": [{ "type": "command", "command": "python3 ~/.claude/plugins/sentinel/hooks/sentinel.py" }] }
     ],
     "PreToolUse": [
-      { "matcher": "Bash", "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/model-router/hooks/pre_tool_use.sh" }] }
+      { "matcher": "Bash", "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/sentinel/hooks/pre_tool_use.sh" }] }
     ],
     "PostToolUse": [
-      { "matcher": "Write|Edit|Bash|Agent|Read|Glob|Grep", "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/model-router/hooks/post_tool_use.sh" }] }
+      { "matcher": "Write|Edit|Bash|Agent|Read|Glob|Grep", "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/sentinel/hooks/post_tool_use.sh" }] }
     ],
     "Stop": [
-      { "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/model-router/hooks/stop_hook.sh" }] }
+      { "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/sentinel/hooks/stop_hook.sh" }] }
     ]
   }
 }
@@ -295,7 +295,7 @@ Test suite covering routing accuracy (including debug/review tiers), cost report
 ## Structure
 
 ```
-claude-model-router/
+claude-sentinel/
 ├── install.sh                     # One-command install (--force, --git-hooks, --update, --all)
 ├── uninstall.sh                   # Clean removal (preserves logs)
 ├── test_hook.sh                   # Test suite with SDLC-5 sign-off log
@@ -303,7 +303,7 @@ claude-model-router/
 ├── plugin/
 │   ├── plugin.json
 │   ├── hooks/
-│   │   ├── model_router.py        # 7-factor routing engine + session tracking + smart compaction
+│   │   ├── sentinel.py        # 7-factor routing engine + session tracking + smart compaction
 │   │   ├── cost_report.py         # Cost report generator
 │   │   ├── pre_tool_use.sh        # Git command interception
 │   │   ├── post_tool_use.sh       # File change tracking + test nudge + subagent tracking

@@ -1,4 +1,4 @@
-# Model Router Plugin
+# Sentinel Plugin
 
 Intelligent model routing for cost optimization in Claude Code.
 
@@ -37,7 +37,7 @@ When you submit a prompt, the hook displays an analysis:
 
 ```
 ╔════════════════════════════════════════════════════════════╗
-║  🤖 Model Router - Cost Optimization                      ║
+║  🤖 Sentinel - Cost Optimization                      ║
 ╚════════════════════════════════════════════════════════════╝
 
 📊 Analysis:
@@ -70,7 +70,7 @@ You can always override by typing:
 
 ### Customizing Keywords
 
-Edit `~/.claude/plugins/model-router/config/patterns.json`:
+Edit `~/.claude/plugins/sentinel/config/patterns.json`:
 
 ```json
 {
@@ -92,7 +92,7 @@ Edit `~/.claude/settings.json`:
 ```json
 {
   "enabledPlugins": {
-    "model-router": false
+    "sentinel": false
   }
 }
 ```
@@ -144,7 +144,7 @@ python3 --version
 
 Check the hook output manually:
 ```bash
-echo '{"prompt":"test prompt"}' | python3 ~/.claude/plugins/model-router/hooks/model_router.py
+echo '{"prompt":"test prompt"}' | python3 ~/.claude/plugins/sentinel/hooks/sentinel.py
 ```
 
 ### Need to see hook execution?
@@ -154,12 +154,12 @@ Enable verbose logging in Claude Code or check terminal output.
 ## Files
 
 ```
-~/.claude/plugins/model-router/
+~/.claude/plugins/sentinel/
 ├── README.md                          (this file)
 ├── plugin.json                        (plugin metadata)
 ├── hooks/
 │   ├── hooks.json                     (hook registration)
-│   └── model_router.py                (main hook script)
+│   └── sentinel.py                (main hook script)
 └── config/
     └── patterns.json                  (keyword patterns)
 ```

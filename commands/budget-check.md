@@ -11,7 +11,7 @@ import json, csv, os
 from datetime import date, timedelta
 from collections import defaultdict
 
-home = os.path.expanduser('~/.claude/plugins/model-router')
+home = os.path.expanduser('~/.claude/plugins/sentinel')
 log = os.path.join(home, 'logs', 'cost_log.csv')
 budget_file = os.path.join(home, 'config', 'budget.json')
 

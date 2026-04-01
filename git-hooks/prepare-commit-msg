@@ -1,5 +1,5 @@
 #!/bin/bash
-# Claude Model Router v3 - prepare-commit-msg hook
+# Claude Sentinel v3 - prepare-commit-msg hook
 # Strips AI-generated trailers before the editor opens.
 # Runs before the developer sees the message, so they never have to manually delete.
 

@@ -1,4 +1,4 @@
-# Model Router Quick Start
+# Sentinel Quick Start
 
 ## What It Does
 
@@ -26,7 +26,7 @@ You'll see analysis output like:
 
 ```
 ╔════════════════════════════════════════════════════════════╗
-║  🤖 Model Router - Cost Optimization                      ║
+║  🤖 Sentinel - Cost Optimization                      ║
 ╚════════════════════════════════════════════════════════════╝
 
 📊 Analysis:
@@ -75,7 +75,7 @@ You can always switch models manually:
 
 ## Customization
 
-Edit keywords in: `~/.claude/plugins/model-router/config/patterns.json`
+Edit keywords in: `~/.claude/plugins/sentinel/config/patterns.json`
 
 ## Disable Temporarily
 
@@ -83,7 +83,7 @@ Edit keywords in: `~/.claude/plugins/model-router/config/patterns.json`
 // In ~/.claude/settings.json
 {
   "enabledPlugins": {
-    "model-router": false
+    "sentinel": false
   }
 }
 ```
@@ -95,14 +95,14 @@ Edit keywords in: `~/.claude/plugins/model-router/config/patterns.json`
 1. Check Python 3 is installed: `python3 --version`
 2. Test manually:
    ```bash
-   echo '{"prompt":"test"}' | python3 ~/.claude/plugins/model-router/hooks/model_router.py
+   echo '{"prompt":"test"}' | python3 ~/.claude/plugins/sentinel/hooks/sentinel.py
    ```
 
 ### Want to see raw analysis?
 
 Test any prompt:
 ```bash
-echo '{"prompt":"YOUR PROMPT HERE"}' | python3 ~/.claude/plugins/model-router/hooks/model_router.py
+echo '{"prompt":"YOUR PROMPT HERE"}' | python3 ~/.claude/plugins/sentinel/hooks/sentinel.py
 ```
 
 ## Cost Savings Tip

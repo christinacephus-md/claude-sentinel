@@ -1,5 +1,5 @@
 #!/bin/bash
-# Claude Model Router v3 - PreToolUse hook
+# Claude Sentinel v3 - PreToolUse hook
 # Intercepts Bash tool calls containing git/gh commands.
 # Actively strips AI trailers from commit messages and PR bodies before they execute.
 
@@ -65,7 +65,7 @@ fi
 
 # Log git push events for awareness
 if [ "$IS_GIT_PUSH" -gt 0 ]; then
-  ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/model-router}"
+  ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/sentinel}"
   LOG_DIR="$ROUTER_HOME/logs"
   mkdir -p "$LOG_DIR"
   echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | git push | $COMMAND" >> "$LOG_DIR/git_operations.log"

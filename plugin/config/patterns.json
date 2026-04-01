@@ -35,5 +35,5 @@
   ],
   "sonnet_default": true,
   "_version": "5.0",
-  "_note": "Keywords are weighted in model_router.py. This file serves as reference and for project overlays. v5.0 adds debug and review keyword tiers."
+  "_note": "Keywords are weighted in sentinel.py. This file serves as reference and for project overlays. v5.0 adds debug and review keyword tiers."
 }

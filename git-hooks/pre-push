@@ -1,5 +1,5 @@
 #!/bin/bash
-# Claude Model Router v5.0 - pre-push hook
+# Claude Sentinel v5.0 - pre-push hook
 # Last line of defense: scan outgoing commits for AI trailers that slipped through.
 # v5.0: PR size gating — warn about oversized diffs before push.
 
