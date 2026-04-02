@@ -1,5 +1,5 @@
 #!/bin/bash
-# Claude Sentinel v5.0 - Test Suite
+# Claude Sentinel v6.0 - Test Suite
 # ITGC-SDLC-5: All testing documented with timestamped sign-off log
 
 PLUGIN_DIR="$HOME/.claude/plugins/sentinel"
@@ -18,7 +18,7 @@ RUN_ID="run_$(date +%s)"
 
 echo ""
 echo "+---------------------------------------------------------+"
-echo "|  Sentinel v5.0 - Test Suite                         |"
+echo "|  Sentinel v6.0 - Test Suite                         |"
 echo "+---------------------------------------------------------+"
 echo ""
 echo "  Run ID:    $RUN_ID"
@@ -392,6 +392,158 @@ if [ -f "$PLUGIN_DIR/hooks/stop_hook.sh" ]; then
     log_result "FAIL" "Stop hook"
     FAIL=$((FAIL + 1))
   fi
+fi
+
+# --- v6.0: PHI Scanner Tests ---
+
+echo ""
+echo "  --- PHI Scanner Tests (v6.0) ---"
+
+# Test: SSN pattern detection in prompt
+result=$(echo '{"prompt":"Patient SSN is 123-45-6789"}' | python3 "$ROUTER" 2>&1)
+if echo "$result" | grep -qi "PHI WARNING"; then
+  echo "  PASS: PHI detected SSN in prompt"
+  log_result "PASS" "PHI: SSN in prompt"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: PHI missed SSN in prompt"
+  log_result "FAIL" "PHI: SSN in prompt"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test: Email pattern detection
+result=$(echo '{"prompt":"Send results to john.doe@hospital.com"}' | python3 "$ROUTER" 2>&1)
+if echo "$result" | grep -qi "PHI WARNING"; then
+  echo "  PASS: PHI detected email in prompt"
+  log_result "PASS" "PHI: email in prompt"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: PHI missed email in prompt"
+  log_result "FAIL" "PHI: email in prompt"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test: Clean prompt no false positive
+result=$(echo '{"prompt":"show me the README"}' | python3 "$ROUTER" 2>&1)
+if echo "$result" | grep -qi "PHI WARNING"; then
+  echo "  FAIL: False positive PHI on clean prompt"
+  log_result "FAIL" "PHI: false positive"
+  FAIL=$((FAIL + 1))
+else
+  echo "  PASS: No false positive on clean prompt"
+  log_result "PASS" "PHI: no false positive"
+  PASS=$((PASS + 1))
+fi
+
+# Test: PHI in bash command
+result=$(echo '{"tool_name":"Bash","tool_input":{"command":"echo 123-45-6789"}}' | bash "$PLUGIN_DIR/hooks/pre_tool_use.sh" 2>&1)
+if echo "$result" | grep -qi "PHI WARNING"; then
+  echo "  PASS: PHI detected SSN in bash command"
+  log_result "PASS" "PHI: SSN in bash"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: PHI missed SSN in bash command"
+  log_result "FAIL" "PHI: SSN in bash"
+  FAIL=$((FAIL + 1))
+fi
+
+# --- v6.0: Prompt Audit Log Tests ---
+
+echo ""
+echo "  --- Prompt Audit Log Tests (v6.0) ---"
+
+AUDIT_LOG="$PLUGIN_DIR/logs/prompt_audit.log"
+BEFORE_COUNT=$(wc -l < "$AUDIT_LOG" 2>/dev/null || echo "0")
+echo '{"prompt":"test audit logging prompt"}' | python3 "$ROUTER" >/dev/null 2>&1
+AFTER_COUNT=$(wc -l < "$AUDIT_LOG" 2>/dev/null || echo "0")
+if [ "$AFTER_COUNT" -gt "$BEFORE_COUNT" ]; then
+  echo "  PASS: Prompt audit log populated"
+  log_result "PASS" "Audit: log populated"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: Prompt audit log not written"
+  log_result "FAIL" "Audit: log populated"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test: deterministic hash
+echo '{"prompt":"deterministic hash test xyz"}' | python3 "$ROUTER" >/dev/null 2>&1
+HASH1=$(tail -1 "$AUDIT_LOG" | cut -d'|' -f2 | tr -d ' ')
+echo '{"prompt":"deterministic hash test xyz"}' | python3 "$ROUTER" >/dev/null 2>&1
+HASH2=$(tail -1 "$AUDIT_LOG" | cut -d'|' -f2 | tr -d ' ')
+if [ "$HASH1" = "$HASH2" ] && [ -n "$HASH1" ]; then
+  echo "  PASS: Audit hash is deterministic"
+  log_result "PASS" "Audit: deterministic hash"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: Audit hash not deterministic ($HASH1 vs $HASH2)"
+  log_result "FAIL" "Audit: deterministic hash"
+  FAIL=$((FAIL + 1))
+fi
+
+# --- v6.0: Secret Scanner Tests ---
+
+echo ""
+echo "  --- Secret Scanner Tests (v6.0) ---"
+
+# Test: AWS key detection in bash
+result=$(echo '{"tool_name":"Bash","tool_input":{"command":"curl -H AKIAIOSFODNN7EXAMPLE16 https://api.example.com"}}' | bash "$PLUGIN_DIR/hooks/pre_tool_use.sh" 2>&1)
+if echo "$result" | grep -qi "SECRET WARNING"; then
+  echo "  PASS: Secret detected AWS key in bash"
+  log_result "PASS" "Secret: AWS key in bash"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: Secret missed AWS key in bash"
+  log_result "FAIL" "Secret: AWS key in bash"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test: GitHub token detection
+result=$(echo '{"tool_name":"Bash","tool_input":{"command":"curl -H \"token ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmn\" https://api.github.com"}}' | bash "$PLUGIN_DIR/hooks/pre_tool_use.sh" 2>&1)
+if echo "$result" | grep -qi "SECRET WARNING"; then
+  echo "  PASS: Secret detected GitHub token in bash"
+  log_result "PASS" "Secret: GitHub token in bash"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: Secret missed GitHub token in bash"
+  log_result "FAIL" "Secret: GitHub token in bash"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test: Write to .env triggers sensitive file warning
+result=$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/.env","content":"DB_HOST=localhost"}}' | bash "$PLUGIN_DIR/hooks/post_tool_use.sh" 2>&1)
+if echo "$result" | grep -qi "SENSITIVE FILE"; then
+  echo "  PASS: Sensitive file path detected (.env)"
+  log_result "PASS" "Secret: sensitive file .env"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: Sensitive file path not detected (.env)"
+  log_result "FAIL" "Secret: sensitive file .env"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test: Write secret content via pre_tool_use_write
+result=$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/config.py","content":"KEY = AKIAIOSFODNN7EXAMPLE16"}}' | bash "$PLUGIN_DIR/hooks/pre_tool_use_write.sh" 2>&1)
+if echo "$result" | grep -qi "SECRET WARNING"; then
+  echo "  PASS: Secret detected in file write content"
+  log_result "PASS" "Secret: content in write"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL: Secret missed in file write content"
+  log_result "FAIL" "Secret: content in write"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test: Clean bash no false positive
+result=$(echo '{"tool_name":"Bash","tool_input":{"command":"ls -la"}}' | bash "$PLUGIN_DIR/hooks/pre_tool_use.sh" 2>&1)
+if echo "$result" | grep -qi "SECRET WARNING\|PHI WARNING"; then
+  echo "  FAIL: False positive on clean bash command"
+  log_result "FAIL" "Secret: false positive"
+  FAIL=$((FAIL + 1))
+else
+  echo "  PASS: No false positive on clean bash"
+  log_result "PASS" "Secret: no false positive"
+  PASS=$((PASS + 1))
 fi
 
 # --- Results ---

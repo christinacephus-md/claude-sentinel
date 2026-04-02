@@ -1,7 +1,8 @@
 #!/bin/bash
-# Claude Sentinel v5.0 - PostToolUse hook
+# Claude Sentinel v6.0 - PostToolUse hook
 # DX feedback loops after tool execution.
 # v5.0: subagent cost tracking, stronger test nudge
+# v6.0: sensitive file path detection
 
 INPUT=$(cat)
 
@@ -89,6 +90,17 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
   if [ -n "$FILE_PATH" ]; then
     # Log the file change
     echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | $TOOL_NAME | $FILE_PATH" >> "$LOG_DIR/file_changes.log"
+
+    # v6.0: Sensitive file path detection
+    BASENAME=$(basename "$FILE_PATH" 2>/dev/null)
+    case "$BASENAME" in
+      .env|.env.*|credentials.json|secrets.json|*.pem|*.key|*.p12|*.pfx|*.jks|id_rsa|id_ed25519|id_ecdsa|*.keystore|service-account*.json)
+        echo "" >&2
+        echo "  SENSITIVE FILE: $BASENAME written — ensure this is not committed." >&2
+        echo "" >&2
+        echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | sensitive_file | $BASENAME | session=${CLAUDE_SESSION_ID:-unknown}" >> "$LOG_DIR/secret_detections.log"
+        ;;
+    esac
 
     # v5.0: Stronger test coverage nudge
     case "$FILE_PATH" in

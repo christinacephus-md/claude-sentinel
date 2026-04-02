@@ -1,0 +1,19 @@
+{
+  "version": "6.0.0",
+  "features": {
+    "phi_scanner": {
+      "enabled": true,
+      "scan_prompts": true,
+      "scan_bash": true
+    },
+    "prompt_audit": {
+      "enabled": true
+    },
+    "secret_scanner": {
+      "enabled": true,
+      "scan_bash": true,
+      "scan_writes": true,
+      "scan_file_paths": true
+    }
+  }
+}

@@ -1,7 +1,8 @@
 #!/bin/bash
-# Claude Sentinel v5.0 - Stop hook
+# Claude Sentinel v6.0 - Stop hook
 # Generates a session summary when Claude Code finishes a conversation turn.
 # v5.0: Smart compaction advisor, subagent cost summary
+# v6.0: SOC 2 compliance layer (PHI, audit, secrets)
 
 ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/sentinel}"
 LOG_DIR="$ROUTER_HOME/logs"
@@ -76,7 +77,7 @@ fi
 if [ "$TOTAL" -gt 0 ] || [ "$FILE_CHANGES" -gt 0 ]; then
   SUMMARY="
   +---------------------------------------------------------+
-  |  Session Summary (v5.0)                                 |
+  |  Session Summary (v6.0)                                 |
   +---------------------------------------------------------+
 
   Routing:  $TOTAL prompts (H:$HAIKU_COUNT S:$SONNET_COUNT O:$OPUS_COUNT)

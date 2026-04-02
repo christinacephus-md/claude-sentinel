@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 """
-Claude Sentinel v5.0
-Intelligent model routing + cost tracking for Claude Code
+Claude Sentinel v6.0
+Developer discipline layer + SOC 2 compliance for Claude Code
 
-v5.0 improvements over v4.0:
-- Debug keyword tier: debugging prompts route to Sonnet minimum
-- Code review routing: review/PR patterns get appropriate model selection
-- Smart compaction advisor: token growth rate analysis, not just prompt count
-- Subagent cost awareness: flags when Agent tool spawns inflate costs
-- Test coverage nudge: stronger warnings for untested source changes
-- PR size gating: pre-push diff size warnings
+v6.0 — SOC 2 compliance layer:
+- PHI pattern scanner: SSN, DOB, MRN, phone, email detection in prompts and commands
+- Prompt audit log: SHA-256 hash-based audit trail (never logs content)
+- Data classification gate: secret/credential detection in commands and file writes
+- All features toggleable via config/sentinel_config.json
+
+v5.0 — developer discipline:
+- Debug keyword tier, code review routing, smart compaction advisor
+- Subagent cost awareness, test coverage nudge, PR size gating
 
 Carried from v4.0:
-- Tiered keyword weights (not all opus keywords are equal)
-- Word boundary matching (prevents "plan" matching "explain")
-- Downgrade signals ("just", "quickly" push toward cheaper models)
-- Stricter opus threshold (10 vs 7) — Sonnet handles 90%+ of coding tasks
-- Wider haiku band (score <= 0 vs -2)
-- Short prompt auto-downgrade
-- Savings tracking vs always-opus baseline
+- Tiered keyword weights, word boundary matching, downgrade signals
+- Stricter opus threshold (10), wider haiku band (<= -1)
+- Short prompt auto-downgrade, savings tracking vs always-opus baseline
 """
 
 import json
@@ -26,6 +24,7 @@ import os
 import sys
 import re
 import csv
+import hashlib
 import tempfile
 from datetime import datetime, date
 from pathlib import Path
@@ -37,9 +36,24 @@ ROUTER_HOME = os.environ.get(
     os.path.expanduser('~/.claude/plugins/sentinel')
 )
 CONFIG_FILE = os.path.join(ROUTER_HOME, 'config', 'patterns.json')
+SENTINEL_CONFIG_FILE = os.path.join(ROUTER_HOME, 'config', 'sentinel_config.json')
 COST_LOG = os.path.join(ROUTER_HOME, 'logs', 'cost_log.csv')
 BUDGET_FILE = os.path.join(ROUTER_HOME, 'config', 'budget.json')
 SESSION_DIR = os.path.join(ROUTER_HOME, 'logs', 'sessions')
+
+# v6.0: SOC 2 compliance logs
+PHI_LOG = os.path.join(ROUTER_HOME, 'logs', 'phi_detections.log')
+AUDIT_LOG = os.path.join(ROUTER_HOME, 'logs', 'prompt_audit.log')
+
+# v6.0: PHI/PII detection patterns
+PHI_PATTERNS = {
+    'ssn': r'\b\d{3}-\d{2}-\d{4}\b',
+    'dob': r'\b(?:DOB|date of birth|born on)\s*[:\-]?\s*\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}\b',
+    'mrn': r'\b(?:MRN|medical record)\s*[:#]?\s*\d{6,10}\b',
+    'phone': r'\b(?:\+1[\s\-]?)?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{4}\b',
+    'email': r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b',
+    'patient_medical': r'\b(?:patient|pt)\s+[A-Z][a-z]+\s+(?:diagnosis|prescribed|admitted|discharged|treatment)\b',
+}
 
 # Model pricing (per 1M tokens)
 PRICING = {
@@ -635,6 +649,50 @@ def cleanup_stale_sessions():
         pass
 
 
+# --- v6.0: SOC 2 Compliance Functions ---
+
+def load_sentinel_config():
+    """Load feature toggle config for v6.0 SOC 2 features."""
+    try:
+        with open(SENTINEL_CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def scan_for_phi(text, source='prompt'):
+    """Scan text for PHI/PII patterns. Returns list of (pattern_name, source) detections."""
+    detections = []
+    for name, pattern in PHI_PATTERNS.items():
+        if re.search(pattern, text, re.IGNORECASE):
+            detections.append((name, source))
+    return detections
+
+
+def log_phi_detection(detections, session_id):
+    """Log PHI detections (metadata only, NEVER content)."""
+    try:
+        ensure_log_dir()
+        now = datetime.now().isoformat()
+        with open(PHI_LOG, 'a') as f:
+            for pattern_name, source in detections:
+                f.write(f'{now} | {pattern_name} | {source} | session={session_id}\n')
+    except Exception:
+        pass
+
+
+def log_prompt_audit(prompt, model, score, session_id, project_dir):
+    """Log SHA-256 hash of prompt for audit trail. NEVER logs content."""
+    try:
+        ensure_log_dir()
+        prompt_hash = hashlib.sha256(prompt.encode('utf-8')).hexdigest()
+        now = datetime.now().isoformat()
+        with open(AUDIT_LOG, 'a') as f:
+            f.write(f'{now} | {prompt_hash} | {model} | {score} | {session_id} | {project_dir}\n')
+    except Exception:
+        pass
+
+
 # --- Main ---
 
 def main():
@@ -663,6 +721,23 @@ def main():
         # Log the decision
         log_routing_decision(model, score, reason, prompt, project_dir)
 
+        # v6.0: SOC 2 compliance checks
+        sentinel_config = load_sentinel_config()
+        session_id = get_session_id()
+
+        # v6.0: Prompt audit log (hash-based, never logs content)
+        if sentinel_config.get('features', {}).get('prompt_audit', {}).get('enabled', True):
+            log_prompt_audit(prompt, model, score, session_id, project_dir)
+
+        # v6.0: PHI pattern scanning
+        if sentinel_config.get('features', {}).get('phi_scanner', {}).get('scan_prompts', True):
+            phi_detections = scan_for_phi(prompt, source='prompt')
+            if phi_detections:
+                log_phi_detection(phi_detections, session_id)
+                pattern_names = ', '.join(d[0] for d in phi_detections)
+                print(f'\n  PHI WARNING: Potential PHI detected in prompt ({pattern_names})', file=sys.stderr)
+                print(f'  Review prompt content before proceeding.\n', file=sys.stderr)
+
         # Track session depth
         session_depth, est_context, session_alert = track_session_depth()
 
@@ -681,7 +756,7 @@ def main():
         output_lines = [
             '',
             '+---------------------------------------------------------+',
-            '|  Sentinel v5.0 - Cost Optimization                  |',
+            '|  Sentinel v6.0 - Cost Optimization + SOC 2           |',
             '+---------------------------------------------------------+',
             '',
             f'  Analysis:',

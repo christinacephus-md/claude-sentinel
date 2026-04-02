@@ -1,13 +1,16 @@
 #!/bin/bash
-# Claude Sentinel v3 - PreToolUse hook
+# Claude Sentinel v6.0 - PreToolUse hook
 # Intercepts Bash tool calls containing git/gh commands.
 # Actively strips AI trailers from commit messages and PR bodies before they execute.
+# v6.0: PHI pattern scanning + secret detection on Bash commands.
 
 # Read the tool input from stdin
 INPUT=$(cat)
 
 TOOL_NAME=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('tool_name',''))" 2>/dev/null)
 COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
+
+ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/sentinel}"
 
 # Only process Bash tool calls
 if [ "$TOOL_NAME" != "Bash" ]; then
@@ -65,10 +68,82 @@ fi
 
 # Log git push events for awareness
 if [ "$IS_GIT_PUSH" -gt 0 ]; then
-  ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/sentinel}"
   LOG_DIR="$ROUTER_HOME/logs"
   mkdir -p "$LOG_DIR"
   echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | git push | $COMMAND" >> "$LOG_DIR/git_operations.log"
+fi
+
+# --- v6.0: Combined PHI + Secret scanning for Bash commands ---
+if [ -n "$COMMAND" ]; then
+  SCAN_RESULT=$(python3 -c "
+import json, os, re, sys
+
+# Load config
+config = {}
+rh = os.environ.get('CLAUDE_ROUTER_HOME', os.path.expanduser('~/.claude/plugins/sentinel'))
+try:
+    with open(os.path.join(rh, 'config', 'sentinel_config.json')) as f:
+        config = json.load(f)
+except: pass
+
+features = config.get('features', {})
+text = sys.stdin.read()
+results = []
+
+# PHI scan
+if features.get('phi_scanner', {}).get('scan_bash', True):
+    phi = {
+        'ssn': r'\b\d{3}-\d{2}-\d{4}\b',
+        'dob': r'\b(?:DOB|date of birth)\s*[:\-]?\s*\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}\b',
+        'mrn': r'\b(?:MRN|medical record)\s*[:#]?\s*\d{6,10}\b',
+        'phone': r'\b(?:\+1[\s\-]?)?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{4}\b',
+        'email': r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b',
+    }
+    hits = [n for n, p in phi.items() if re.search(p, text, re.IGNORECASE)]
+    if hits:
+        results.append('phi:' + ','.join(hits))
+
+# Secret scan
+if features.get('secret_scanner', {}).get('scan_bash', True):
+    sec = {
+        'aws_key': r'AKIA[0-9A-Z]{16}',
+        'github_token': r'gh[ps]_[A-Za-z0-9_]{36,}',
+        'github_pat': r'github_pat_[A-Za-z0-9_]{22,}',
+        'bearer': r'[Bb]earer\s+[A-Za-z0-9\-._~+/]{20,}',
+        'generic_secret': r'(?:password|secret|token|api_key|apikey)\s*[=:]\s*[\x22\x27]?[A-Za-z0-9\-._~+/]{8,}',
+        'private_key': r'-----BEGIN.*PRIVATE KEY-----',
+    }
+    hits = [n for n, p in sec.items() if re.search(p, text)]
+    if hits:
+        results.append('secret:' + ','.join(hits))
+
+print('|'.join(results) if results else '')
+" <<< "$COMMAND" 2>/dev/null)
+
+  if [ -n "$SCAN_RESULT" ]; then
+    LOG_DIR="$ROUTER_HOME/logs"
+    mkdir -p "$LOG_DIR"
+    SESSION_ID="${CLAUDE_SESSION_ID:-unknown}"
+
+    # Parse and display warnings
+    if echo "$SCAN_RESULT" | grep -q "phi:"; then
+      PHI_TYPES=$(echo "$SCAN_RESULT" | grep -o 'phi:[^|]*' | sed 's/phi://')
+      echo "" >&2
+      echo "  PHI WARNING: Potential PHI in Bash command ($PHI_TYPES)" >&2
+      echo "  Review command content before proceeding." >&2
+      echo "" >&2
+      echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | $PHI_TYPES | bash | session=$SESSION_ID" >> "$LOG_DIR/phi_detections.log"
+    fi
+
+    if echo "$SCAN_RESULT" | grep -q "secret:"; then
+      SECRET_TYPES=$(echo "$SCAN_RESULT" | grep -o 'secret:[^|]*' | sed 's/secret://')
+      echo "" >&2
+      echo "  SECRET WARNING: Potential secrets in Bash command ($SECRET_TYPES)" >&2
+      echo "  Use environment variables instead of hardcoded secrets." >&2
+      echo "" >&2
+      echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | $SECRET_TYPES | bash | session=$SESSION_ID" >> "$LOG_DIR/secret_detections.log"
+    fi
+  fi
 fi
 
 exit 0

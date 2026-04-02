@@ -1,11 +1,11 @@
 {
   "name": "sentinel",
-  "version": "5.0.0",
-  "description": "Claude Code discipline layer — model routing, cost tracking, git hygiene, session telemetry, TDD nudge, subagent awareness, PR size gating",
+  "version": "6.0.0",
+  "description": "Claude Code discipline layer + SOC 2 compliance — cost tracking, git hygiene, PHI scanning, prompt audit, secret detection, TDD nudge, subagent awareness, PR size gating",
   "author": "Christina Cephus",
   "hooks": {
     "UserPromptSubmit": "hooks/sentinel.py",
-    "PreToolUse": "hooks/pre_tool_use.sh",
+    "PreToolUse": ["hooks/pre_tool_use.sh", "hooks/pre_tool_use_write.sh"],
     "PostToolUse": "hooks/post_tool_use.sh",
     "Stop": "hooks/stop_hook.sh"
   },
@@ -28,8 +28,15 @@
     "pr_size_gating": "Pre-push diff size warnings with configurable thresholds",
     "smart_compaction": "Context growth analysis with targeted /compact recommendations"
   },
+  "v6_skills": {
+    "phi_scanner": "PHI/PII pattern detection in prompts and Bash commands (SOC 2)",
+    "prompt_audit": "SHA-256 hash-based prompt audit trail (SOC 2)",
+    "secret_scanner": "Secret/credential detection in commands and file writes (SOC 2)",
+    "sensitive_file_detection": "Warns when writing to .env, credentials.json, *.pem, etc."
+  },
   "config": {
     "pr_size_warn": "CLAUDE_PR_SIZE_WARN env var (default: 500 lines)",
-    "pr_size_block": "CLAUDE_PR_SIZE_BLOCK env var (default: 2000 lines)"
+    "pr_size_block": "CLAUDE_PR_SIZE_BLOCK env var (default: 2000 lines)",
+    "sentinel_config": "config/sentinel_config.json — feature toggles for v6.0 SOC 2 features"
   }
 }

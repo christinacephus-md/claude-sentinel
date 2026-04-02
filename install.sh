@@ -1,5 +1,5 @@
 #!/bin/bash
-# Claude Sentinel v3.0 - Installation Script
+# Claude Sentinel v6.0 - Installation Script
 # The full Claude Code discipline layer.
 #
 # Usage:
@@ -11,7 +11,7 @@
 
 set -e
 
-VERSION="5.0.0"
+VERSION="6.0.0"
 PLUGIN_DIR="$HOME/.claude/plugins/sentinel"
 SETTINGS="$HOME/.claude/settings.json"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -81,6 +81,7 @@ cp "$SCRIPT_DIR/plugin/hooks/cost_report.py" "$PLUGIN_DIR/hooks/"
 cp "$SCRIPT_DIR/plugin/hooks/pre_tool_use.sh" "$PLUGIN_DIR/hooks/"
 cp "$SCRIPT_DIR/plugin/hooks/post_tool_use.sh" "$PLUGIN_DIR/hooks/"
 cp "$SCRIPT_DIR/plugin/hooks/stop_hook.sh" "$PLUGIN_DIR/hooks/"
+cp "$SCRIPT_DIR/plugin/hooks/pre_tool_use_write.sh" "$PLUGIN_DIR/hooks/"
 cp "$SCRIPT_DIR/plugin/plugin.json" "$PLUGIN_DIR/"
 
 chmod +x "$PLUGIN_DIR/hooks/"*.py "$PLUGIN_DIR/hooks/"*.sh
@@ -90,9 +91,11 @@ if [ "$FLAG_UPDATE" -eq 1 ]; then
   # Only copy if file doesn't exist
   [ ! -f "$PLUGIN_DIR/config/patterns.json" ] && cp "$SCRIPT_DIR/plugin/config/patterns.json" "$PLUGIN_DIR/config/"
   [ ! -f "$PLUGIN_DIR/config/budget.json" ] && cp "$SCRIPT_DIR/plugin/config/budget.json" "$PLUGIN_DIR/config/"
+  [ ! -f "$PLUGIN_DIR/config/sentinel_config.json" ] && cp "$SCRIPT_DIR/plugin/config/sentinel_config.json" "$PLUGIN_DIR/config/"
 else
   cp "$SCRIPT_DIR/plugin/config/patterns.json" "$PLUGIN_DIR/config/"
   [ ! -f "$PLUGIN_DIR/config/budget.json" ] && cp "$SCRIPT_DIR/plugin/config/budget.json" "$PLUGIN_DIR/config/"
+  [ ! -f "$PLUGIN_DIR/config/sentinel_config.json" ] && cp "$SCRIPT_DIR/plugin/config/sentinel_config.json" "$PLUGIN_DIR/config/"
 fi
 
 # Agents and commands
@@ -125,6 +128,15 @@ HOOKS_JSON='{
         {
           "type": "command",
           "command": "bash ~/.claude/plugins/sentinel/hooks/pre_tool_use.sh"
+        }
+      ]
+    },
+    {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash ~/.claude/plugins/sentinel/hooks/pre_tool_use_write.sh"
         }
       ]
     }
