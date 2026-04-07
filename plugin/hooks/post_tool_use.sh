@@ -16,7 +16,8 @@ mkdir -p "$LOG_DIR" "$SESSION_DIR"
 
 # --- Helper: get session file ---
 get_session_file() {
-  SESSION_ID="${CLAUDE_SESSION_ID:-$$}"
+  # Use PPID (not $$) to match sentinel.py's os.getppid() fallback
+  SESSION_ID="${CLAUDE_SESSION_ID:-$PPID}"
   echo "$SESSION_DIR/session_${SESSION_ID}.json"
 }
 
@@ -47,7 +48,8 @@ if [ "$TOOL_NAME" = "Agent" ]; then
   SUBAGENT_TYPE=$(echo "$TOOL_INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('subagent_type','general-purpose'))" 2>/dev/null)
   DESCRIPTION=$(echo "$TOOL_INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('description',''))" 2>/dev/null)
 
-  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | Agent | type=$SUBAGENT_TYPE | $DESCRIPTION" >> "$LOG_DIR/file_changes.log"
+  # Log agent type only — description may contain PHI from user prompts
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | Agent | type=$SUBAGENT_TYPE | [description scrubbed]" >> "$LOG_DIR/file_changes.log"
 
   # Check how many subagents this session has spawned
   SESSION_FILE=$(get_session_file)
@@ -150,7 +152,10 @@ fi
 if [ "$TOOL_NAME" = "Bash" ]; then
   COMMAND=$(echo "$TOOL_INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('command',''))" 2>/dev/null)
 
-  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | bash | $COMMAND" >> "$LOG_DIR/session_commands.log"
+  # Hash command instead of logging raw content — may contain secrets/PHI
+  CMD_HASH=$(echo -n "$COMMAND" | shasum -a 256 | cut -d' ' -f1)
+  CMD_PREFIX=$(echo "$COMMAND" | cut -c1-30 | sed 's/[^a-zA-Z0-9 _\-\/\.]//g')
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | bash | ${CMD_PREFIX}... | sha256:${CMD_HASH:0:16}" >> "$LOG_DIR/session_commands.log"
 
   increment_session_counter "bash_calls"
 fi

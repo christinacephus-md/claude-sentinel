@@ -1,5 +1,5 @@
 {
-  "description": "Model routing hook for cost optimization - routes prompts to optimal Claude model",
+  "description": "Sentinel v7.0 — cost optimization, SOC 2 compliance, PHI scanning, model routing",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -7,6 +7,40 @@
           {
             "type": "command",
             "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sentinel.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/pre_tool_use.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/pre_tool_use_write.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/post_tool_use.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/stop_hook.sh"
           }
         ]
       }

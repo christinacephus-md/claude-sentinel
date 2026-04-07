@@ -10,9 +10,9 @@
     "Stop": "hooks/stop_hook.sh"
   },
   "git_hooks": [
-    "git-hooks/prepare-commit-msg",
-    "git-hooks/commit-msg",
-    "git-hooks/pre-push"
+    "../git-hooks/prepare-commit-msg",
+    "../git-hooks/commit-msg",
+    "../git-hooks/pre-push"
   ],
   "components": {
     "routing": "hooks/sentinel.py",

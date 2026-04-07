@@ -44,7 +44,8 @@ if [ -f "$LOG_DIR/git_operations.log" ]; then
 fi
 
 # v5.0: Get session-specific stats
-SESSION_ID="${CLAUDE_SESSION_ID:-$$}"
+# Use PPID (not $$) to match sentinel.py's os.getppid() fallback
+SESSION_ID="${CLAUDE_SESSION_ID:-$PPID}"
 SESSION_FILE="$SESSION_DIR/session_${SESSION_ID}.json"
 SUBAGENT_SPAWNS=0
 SESSION_FILE_READS=0

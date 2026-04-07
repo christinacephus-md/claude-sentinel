@@ -45,14 +45,44 @@ SESSION_DIR = os.path.join(ROUTER_HOME, 'logs', 'sessions')
 PHI_LOG = os.path.join(ROUTER_HOME, 'logs', 'phi_detections.log')
 AUDIT_LOG = os.path.join(ROUTER_HOME, 'logs', 'prompt_audit.log')
 
-# v6.0: PHI/PII detection patterns
+# v7.0: PHI/PII detection — all 18 HIPAA Safe Harbor identifiers
 PHI_PATTERNS = {
-    'ssn': r'\b\d{3}-\d{2}-\d{4}\b',
-    'dob': r'\b(?:DOB|date of birth|born on)\s*[:\-]?\s*\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}\b',
-    'mrn': r'\b(?:MRN|medical record)\s*[:#]?\s*\d{6,10}\b',
-    'phone': r'\b(?:\+1[\s\-]?)?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{4}\b',
-    'email': r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b',
+    # 1. Names (patient context)
     'patient_medical': r'\b(?:patient|pt)\s+[A-Z][a-z]+\s+(?:diagnosis|prescribed|admitted|discharged|treatment)\b',
+    # 2. Geographic data (ZIP codes more specific than 3-digit)
+    'zip_code': r'\b\d{5}(?:-\d{4})?\b',
+    # 3. Dates (DOB, admission, discharge, death)
+    'dob': r'\b(?:DOB|date of birth|born on|admitted|discharged|died)\s*[:\-]?\s*\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}\b',
+    # 4. Phone numbers
+    'phone': r'\b(?:\+1[\s\-]?)?\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}\b',
+    # 5. Fax numbers
+    'fax': r'\b(?:fax|facsimile)\s*[:\-]?\s*(?:\+1[\s\-]?)?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{4}\b',
+    # 6. Email addresses
+    'email': r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b',
+    # 7. SSN (exclude known non-SSN ranges: 000, 666, 900-999)
+    'ssn': r'\b(?!000|666|9\d{2})\d{3}[- ]?\d{2}[- ]?\d{4}\b',
+    # 8. MRN / Medical record numbers
+    'mrn': r'\b(?:MRN|medical record|chart)\s*[:#]?\s*\d{6,10}\b',
+    # 9. Health plan beneficiary numbers
+    'health_plan': r'\b(?:beneficiary|member|policy|insurance)\s*(?:id|#|number)\s*[:\-]?\s*[A-Z0-9]{6,15}\b',
+    # 10. Account numbers
+    'account_number': r'\b(?:account|acct)\s*[:#]?\s*\d{8,12}\b',
+    # 11. Certificate/license numbers (DEA, NPI, medical license)
+    'license': r'\b(?:DEA|NPI|license)\s*[:#]?\s*[A-Z0-9]{7,15}\b',
+    # 12. Vehicle identifiers (VIN)
+    'vin': r'\b[A-HJ-NPR-Z0-9]{17}\b',
+    # 13. Device identifiers (UDI)
+    'device_id': r'\b(?:UDI|device|serial)\s*[:#]?\s*[A-Z0-9\-]{10,20}\b',
+    # 14. Web URLs (patient portal links)
+    'patient_url': r'\b(?:patient|portal|mychart)\S*https?://\S+\b',
+    # 15. IP addresses
+    'ip_address': r'\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b',
+    # 16. Biometric identifiers (keywords)
+    'biometric': r'\b(?:fingerprint|voiceprint|retina|iris|facial recognition|biometric)\s+(?:data|scan|id|record)\b',
+    # 17. Full-face photo filenames
+    'photo': r'\b(?:patient|face|headshot|photo)_?\w*\.(?:jpg|jpeg|png|gif|bmp|tiff)\b',
+    # 18. Any unique identifying code
+    'patient_id': r'\b(?:patient_id|subscriber_id|member_id)\s*[=:]\s*["\']?[A-Za-z0-9\-]{6,}\b',
 }
 
 # Model pricing (per 1M tokens)
