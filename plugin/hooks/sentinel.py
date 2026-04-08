@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Claude Sentinel v6.0
+Claude Sentinel v7.0
 Developer discipline layer + SOC 2 compliance for Claude Code
 
 v6.0 — SOC 2 compliance layer:
@@ -763,7 +763,7 @@ def main():
         output_lines = [
             '',
             '+---------------------------------------------------------+',
-            '|  Sentinel v6.0 - Cost Optimization + SOC 2           |',
+            '|  Sentinel v7.0 - Cost Optimization + SOC 2           |',
             '+---------------------------------------------------------+',
             '',
             f'  Analysis:',
