@@ -103,6 +103,7 @@ cp "$SCRIPT_DIR/agents/router-advisor.md" "$PLUGIN_DIR/agents/"
 cp "$SCRIPT_DIR/agents/petra-security.md" "$PLUGIN_DIR/agents/"
 cp "$SCRIPT_DIR/agents/petra-code.md" "$PLUGIN_DIR/agents/"
 cp "$SCRIPT_DIR/agents/petra-simplify.md" "$PLUGIN_DIR/agents/"
+cp "$SCRIPT_DIR/agents/petra-history.md" "$PLUGIN_DIR/agents/"
 cp "$SCRIPT_DIR/commands/cost-report.md" "$PLUGIN_DIR/commands/"
 cp "$SCRIPT_DIR/commands/budget-check.md" "$PLUGIN_DIR/commands/"
 cp "$SCRIPT_DIR/commands/petra.md" "$PLUGIN_DIR/commands/"
@@ -123,11 +124,12 @@ ln -sf "$PLUGIN_DIR/commands/budget-check.md" "$CLAUDE_CMDS/budget-check.md"
 ln -sf "$PLUGIN_DIR/agents/petra-security.md" "$CLAUDE_AGENTS/petra-security.md"
 ln -sf "$PLUGIN_DIR/agents/petra-code.md" "$CLAUDE_AGENTS/petra-code.md"
 ln -sf "$PLUGIN_DIR/agents/petra-simplify.md" "$CLAUDE_AGENTS/petra-simplify.md"
+ln -sf "$PLUGIN_DIR/agents/petra-history.md" "$CLAUDE_AGENTS/petra-history.md"
 ln -sf "$PLUGIN_DIR/agents/router-advisor.md" "$CLAUDE_AGENTS/router-advisor.md"
 
 echo "  Core files installed."
 echo "  PETRA commands: /petra, /petra-rebuild"
-echo "  PETRA agents: petra-security, petra-code, petra-simplify"
+echo "  PETRA agents: petra-security, petra-code, petra-simplify, petra-history"
 
 # Check for gh CLI (required by PETRA)
 if command -v gh &> /dev/null; then

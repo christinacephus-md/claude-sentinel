@@ -21,7 +21,8 @@
       "agents/router-advisor.md",
       "agents/petra-security.md",
       "agents/petra-code.md",
-      "agents/petra-simplify.md"
+      "agents/petra-simplify.md",
+      "agents/petra-history.md"
     ],
     "commands": [
       "commands/cost-report.md",
@@ -45,7 +46,7 @@
     "sensitive_file_detection": "Warns when writing to .env, credentials.json, *.pem, etc."
   },
   "v7_skills": {
-    "petra_review": "/petra — 4-agent parallel PR review with KAIROS pattern learning",
+    "petra_review": "/petra — 5-agent parallel PR review with re-review, self-review, and KAIROS pattern learning",
     "petra_rebuild": "/petra-rebuild — KAIROS pattern extraction from GitHub PR history",
     "phi_patterns_unified": "18 HIPAA Safe Harbor patterns in single config file (phi_patterns.json)",
     "repo_agnostic": "Auto-detect repo from git remote for all gh commands"
