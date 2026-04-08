@@ -1,136 +1,155 @@
-# Claude Sentinel v5.0
+# Claude Sentinel v7.0
 
 <p align="center">
-  <img src="Sentinel.png" alt="Claude Sentinel v5.0 - Developer Discipline Layer" width="700">
-</p>
-
-<p align="center">
-  <strong>The full Claude Code discipline layer.</strong><br>
-  Model routing, git hygiene enforcement, commit quality gates, session telemetry, subagent cost tracking, TDD nudges, PR size gating, and smart compaction — installed with one command.
+  <strong>The full Claude Code discipline layer + PETRA review pipeline.</strong><br>
+  Model routing, PETRA multi-agent code review, KAIROS pattern learning, 18 HIPAA Safe Harbor PHI scanning, SOC 2 compliance, git hygiene, cost tracking, and enterprise developer onboarding — installed with one command.
 </p>
 
 <p align="center">
   <a href="#install">Install</a> &bull;
-  <a href="#what-you-get">Features</a> &bull;
+  <a href="#petra">PETRA</a> &bull;
+  <a href="#model-routing">Routing</a> &bull;
+  <a href="#soc-2-compliance">SOC 2</a> &bull;
   <a href="#git-hygiene">Git Hygiene</a> &bull;
-  <a href="#claude-code-hooks">Hooks</a> &bull;
   <a href="#cost-tracking">Cost Tracking</a> &bull;
-  <a href="#enterprise-architecture">Enterprise Architecture</a>
+  <a href="#architecture">Architecture</a>
 </p>
 
 ---
 
-## Enterprise Architecture
+## Architecture
 
-How Sentinel integrates across the LifeMD engineering organization:
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2d1b69', 'primaryTextColor': '#e0d4ff', 'primaryBorderColor': '#b14eff', 'lineColor': '#00e5ff', 'secondaryColor': '#0a1628', 'tertiaryColor': '#1a0a3e', 'fontFamily': 'monospace'}}}%%
 
+flowchart TB
+    subgraph org ["🏢 LifeMD Engineering"]
+        direction LR
+        E1["Engineer A<br/><i>ai-relay</i>"]
+        E2["Engineer B<br/><i>billing</i>"]
+        E3["Engineer C<br/><i>frontend</i>"]
+    end
+
+    subgraph sentinel ["🏛 CLAUDE SENTINEL v7.0"]
+        direction TB
+
+        subgraph hooks ["⚙ 4 Lifecycle Hooks"]
+            direction LR
+            H1["UserPromptSubmit<br/><i>model routing<br/>PHI scan · budget</i>"]
+            H2["PreToolUse<br/><i>git hygiene<br/>PHI/secret block</i>"]
+            H3["PostToolUse<br/><i>TDD nudge<br/>subagent tracking</i>"]
+            H4["Stop<br/><i>session summary<br/>savings report</i>"]
+        end
+
+        subgraph petra ["✦ PETRA — Review Pipeline"]
+            direction TB
+
+            subgraph agents ["⚔ 5 Parallel Agents"]
+                direction LR
+                A1["🔍 petra-code<br/><i>bugs · logic<br/>conventions</i>"]
+                A2["🧹 petra-simplify<br/><i>duplication<br/>dead code</i>"]
+                A3["🛡 petra-security<br/><i>18 HIPAA IDs<br/>injection · auth</i>"]
+                A4["📜 petra-history<br/><i>blame · churn<br/>past feedback</i>"]
+                A5["⚡ codex gpt-5.4<br/><i>edge cases<br/>fragility</i>"]
+            end
+
+            subgraph modes ["📋 3 Modes"]
+                direction LR
+                M1["<b>/petra 96</b><br/>fresh review"]
+                M2["<b>--re-review</b><br/>FIXED / NOT FIXED"]
+                M3["<b>--self</b><br/>pre-push gate"]
+            end
+
+            subgraph kairos ["♻ KAIROS"]
+                K1["<b>/petra-rebuild</b><br/><i>pattern extraction<br/>auto every 5 reviews</i>"]
+                K2["REVIEW.md<br/><i>learned patterns</i>"]
+            end
+        end
+
+        subgraph soc2 ["🔒 SOC 2 Compliance"]
+            direction LR
+            S1["PHI Scanner<br/><i>18 HIPAA IDs<br/>warn or block</i>"]
+            S2["Secret Scanner<br/><i>AWS · GitHub · JWT<br/>warn or block</i>"]
+            S3["Prompt Audit<br/><i>SHA-256 trail</i>"]
+            S4["Log Scrubbing<br/><i>hash commands<br/>redact tokens</i>"]
+        end
+
+        subgraph git ["📝 Git Hygiene"]
+            direction LR
+            G1["prepare-commit-msg<br/><i>strip AI trailers</i>"]
+            G2["commit-msg<br/><i>conventional commits</i>"]
+            G3["pre-push<br/><i>PR size gating</i>"]
+        end
+
+        subgraph cost ["💰 Cost Optimization"]
+            direction LR
+            C1["Model Router<br/><i>haiku · sonnet · opus<br/>7-factor scoring</i>"]
+            C2["Budget Alerts<br/><i>daily · weekly limits</i>"]
+            C3["Session Depth<br/><i>compaction advisor</i>"]
+        end
+    end
+
+    subgraph output ["📤 Outputs"]
+        direction LR
+        O1["GitHub PR<br/>comments"]
+        O2["cost_log.csv"]
+        O3["phi_detections.log"]
+        O4["prompt_audit.log"]
+        O5["session_summary.log"]
+    end
+
+    E1 & E2 & E3 --> sentinel
+    hooks --> output
+    A1 & A2 & A3 & A4 & A5 --> O1
+    K1 -.->|"rebuilds"| K2
+    K2 -.->|"feeds reviews"| agents
+    S1 -.->|"shared config"| A3
+
+    style org fill:#0a1628,stroke:#00e5ff,color:#e0d4ff,stroke-width:2px
+    style sentinel fill:#0d0221,stroke:#b14eff,color:#e0d4ff,stroke-width:3px
+    style hooks fill:#2d1b69,stroke:#b14eff,color:#e0d4ff,stroke-width:2px
+    style petra fill:#1a0a3e,stroke:#ff6ec7,color:#e0d4ff,stroke-width:2px
+    style agents fill:#0f2847,stroke:#00e5ff,color:#e0d4ff,stroke-width:2px
+    style modes fill:#2d1b69,stroke:#b14eff,color:#e0d4ff,stroke-width:1px
+    style kairos fill:#1a0a3e,stroke:#ff6ec7,color:#e0d4ff,stroke-width:2px,stroke-dasharray: 5 5
+    style soc2 fill:#2d1b69,stroke:#ff6ec7,color:#e0d4ff,stroke-width:2px
+    style git fill:#0f2847,stroke:#00e5ff,color:#e0d4ff,stroke-width:2px
+    style cost fill:#0f2847,stroke:#00e5ff,color:#e0d4ff,stroke-width:2px
+    style output fill:#0a1628,stroke:#00e5ff,color:#e0d4ff,stroke-width:2px
+
+    style E1 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style E2 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style E3 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style H1 fill:#3d2080,stroke:#b14eff,color:#e0d4ff
+    style H2 fill:#3d2080,stroke:#b14eff,color:#e0d4ff
+    style H3 fill:#3d2080,stroke:#b14eff,color:#e0d4ff
+    style H4 fill:#3d2080,stroke:#b14eff,color:#e0d4ff
+    style A1 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style A2 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style A3 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style A4 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style A5 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style M1 fill:#3d2080,stroke:#b14eff,color:#e0d4ff
+    style M2 fill:#3d2080,stroke:#b14eff,color:#e0d4ff
+    style M3 fill:#3d2080,stroke:#b14eff,color:#e0d4ff
+    style K1 fill:#1a0a3e,stroke:#ff6ec7,color:#e0d4ff
+    style K2 fill:#1a0a3e,stroke:#ff6ec7,color:#e0d4ff
+    style S1 fill:#3d2080,stroke:#ff6ec7,color:#e0d4ff
+    style S2 fill:#3d2080,stroke:#ff6ec7,color:#e0d4ff
+    style S3 fill:#3d2080,stroke:#ff6ec7,color:#e0d4ff
+    style S4 fill:#3d2080,stroke:#ff6ec7,color:#e0d4ff
+    style G1 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style G2 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style G3 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style C1 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style C2 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style C3 fill:#0f2847,stroke:#00e5ff,color:#e0d4ff
+    style O1 fill:#0a1628,stroke:#00e5ff,color:#e0d4ff
+    style O2 fill:#0a1628,stroke:#00e5ff,color:#e0d4ff
+    style O3 fill:#0a1628,stroke:#00e5ff,color:#e0d4ff
+    style O4 fill:#0a1628,stroke:#00e5ff,color:#e0d4ff
+    style O5 fill:#0a1628,stroke:#00e5ff,color:#e0d4ff
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    LifeMD Engineering Organization                  │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
-│  │  Engineer A   │  │  Engineer B   │  │  Engineer C   │   ...      │
-│  │  (ai-relay)   │  │  (billing)    │  │  (frontend)   │            │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘              │
-│         │                  │                  │                      │
-│         └──────────────────┼──────────────────┘                     │
-│                            │                                        │
-│                   ┌────────▼────────┐                               │
-│                   │  Claude Code    │                                │
-│                   │  (any session)  │                                │
-│                   └────────┬────────┘                                │
-│                            │                                        │
-│  ┌─────────────────────────▼─────────────────────────────────┐      │
-│  │              CLAUDE SENTINEL v5.0                          │      │
-│  │           ~/.claude/plugins/sentinel/                      │      │
-│  ├────────────────────────────────────────────────────────────┤      │
-│  │                                                            │      │
-│  │  ┌─────────────────┐  ┌──────────────────┐                │      │
-│  │  │ UserPromptSubmit │  │   PreToolUse     │                │      │
-│  │  │ ─────────────── │  │ ──────────────── │                │      │
-│  │  │ • Cost scoring   │  │ • Git command    │                │      │
-│  │  │ • Debug routing  │  │   interception   │                │      │
-│  │  │ • Review routing │  │ • AI trailer     │                │      │
-│  │  │ • Session depth  │  │   stripping      │                │      │
-│  │  │ • Budget alerts  │  │ • PR body        │                │      │
-│  │  │ • Compaction     │  │   validation     │                │      │
-│  │  │   advisor        │  │                  │                │      │
-│  │  └─────────────────┘  └──────────────────┘                │      │
-│  │                                                            │      │
-│  │  ┌─────────────────┐  ┌──────────────────┐                │      │
-│  │  │  PostToolUse     │  │     Stop         │                │      │
-│  │  │ ──────────────── │  │ ──────────────── │                │      │
-│  │  │ • TDD nudge      │  │ • Session        │                │      │
-│  │  │ • Subagent cost  │  │   summary        │                │      │
-│  │  │   tracking       │  │ • Savings        │                │      │
-│  │  │ • File read      │  │   report         │                │      │
-│  │  │   counting       │  │ • Context        │                │      │
-│  │  │ • Bash command   │  │   composition    │                │      │
-│  │  │   logging        │  │                  │                │      │
-│  │  └─────────────────┘  └──────────────────┘                │      │
-│  │                                                            │      │
-│  │  ┌──────────────────────────────────────────┐             │      │
-│  │  │           Git Hooks (Global)              │             │      │
-│  │  │ ──────────────────────────────────────── │             │      │
-│  │  │ • prepare-commit-msg: strip AI trailers   │             │      │
-│  │  │ • commit-msg: conventional commit gate    │             │      │
-│  │  │ • pre-push: AI trailer scan + PR size     │             │      │
-│  │  └──────────────────────────────────────────┘             │      │
-│  └────────────────────────────────────────────────────────────┘      │
-│                            │                                        │
-│              ┌─────────────▼─────────────────┐                      │
-│              │         Outputs                │                      │
-│              ├───────────────────────────────┤                      │
-│              │ • cost_log.csv (every prompt)  │                      │
-│              │ • session_summary.log          │                      │
-│              │ • test_results.log (SDLC-5)    │                      │
-│              │ • file_changes.log             │                      │
-│              │ • git_operations.log           │                      │
-│              └─────────────┬─────────────────┘                      │
-│                            │                                        │
-│  ┌─────────────────────────▼─────────────────────────────────┐      │
-│  │              Enterprise Benefits                           │      │
-│  ├────────────────────────────────────────────────────────────┤      │
-│  │                                                            │      │
-│  │  COST GOVERNANCE          COMPLIANCE (ITGC-SDLC)          │      │
-│  │  ├─ 80%+ savings vs       ├─ 12/12 controls satisfied    │      │
-│  │  │  all-Opus baseline      ├─ Automated test sign-off     │      │
-│  │  ├─ Budget alerts at       ├─ UAT checklist (VALIDATION)  │      │
-│  │  │  80% threshold          ├─ Issues register (ISSUES)    │      │
-│  │  ├─ Per-project cost       └─ Role matrix (ACCESS)        │      │
-│  │  │  attribution                                           │      │
-│  │  └─ Session depth                                         │      │
-│  │     warnings               CODE QUALITY                   │      │
-│  │                            ├─ Conventional commits        │      │
-│  │  SECURITY                  ├─ TDD enforcement             │      │
-│  │  ├─ AI attribution         ├─ PR size gating              │      │
-│  │  │  stripped (3 layers)    ├─ Subagent cost awareness     │      │
-│  │  ├─ PHI pattern scanning   └─ Smart compaction            │      │
-│  │  ├─ No third-party deps                                   │      │
-│  │  └─ Hook bypass audit                                     │      │
-│  │     trail                                                 │      │
-│  └────────────────────────────────────────────────────────────┘      │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## The Problem
-
-1. Running Opus for "yes" and "looks good" burns 60x more than Haiku
-2. Debugging tasks on Haiku waste time — too weak to reason about errors
-3. Long conversations silently rack up cache write costs ($2-4/prompt on Opus at 100K+ context)
-4. Claude Code injects `Co-Authored-By` and `Generated with Claude Code` into your git history
-5. No visibility into where tokens are going across projects
-6. Subagent spawns are the hidden cost killer — no tracking or warnings
-7. No guardrails on PR size, commit quality, or test coverage
-8. No session-level telemetry for async team handoffs
-
-## The Fix
-
-v5 covers all eight. Model routing uses tiered keyword weights, debug/review-aware routing, and downgrade signals to aggressively route simple tasks to Haiku while enforcing Sonnet minimums for debugging and code review. Git hooks strip AI trailers and gate PR size. PostToolUse tracks subagent spawns and nudges TDD. Smart compaction tells you *why* your context is bloated — not just that it is. All of it stacks with `/fast` mode.
 
 ---
 
@@ -140,27 +159,88 @@ v5 covers all eight. Model routing uses tiered keyword weights, debug/review-awa
 git clone https://github.com/christinacephus-md/claude-sentinel.git
 cd claude-sentinel
 
-# Core install (routing + Claude Code hooks)
-./install.sh --force
-
-# Full install (add git hooks too)
+# Full install (routing + hooks + git hooks + PETRA)
 ./install.sh --all
 
-# Update existing install (preserves your config)
+# Core only (routing + hooks)
+./install.sh --force
+
+# Update existing install (preserves config)
 ./install.sh --update --force
 ```
 
+After install, you get:
+
+| Command | What It Does |
+|---|---|
+| `/petra <PR#>` | 5-agent parallel PR review, consolidate, post to GitHub |
+| `/petra <PR#> --re-review` | Track FIXED / NOT FIXED per finding |
+| `/petra --self` | Review uncommitted changes before pushing |
+| `/petra-rebuild` | KAIROS: regenerate REVIEW.md from PR history |
+| `/budget-check` | Check spending against daily/weekly limits |
+
 ---
 
-## What You Get
+## PETRA
 
-### 1. Model Routing (UserPromptSubmit)
+**P**attern-**E**xtracted **T**esting & **R**eview **A**gent — a 5-agent parallel code review pipeline that learns from historical review patterns.
 
-Every prompt scored across 7 factors with tiered keyword weights, word boundary matching, debug/review awareness, and downgrade signal detection. Short follow-ups auto-route to Haiku. Debugging and code review prompts enforce a Sonnet floor.
+### Agents
+
+| Agent | Focus |
+|---|---|
+| **petra-code** | Bugs, logic errors, convention violations, CLAUDE.md compliance |
+| **petra-simplify** | Duplication, dead code, unnecessary complexity |
+| **petra-security** | 18 HIPAA Safe Harbor identifiers, injection, auth, infra |
+| **petra-history** | Git blame (pre-existing vs new), file churn, previous PR feedback |
+| **codex** (gpt-5.4) | Edge-case correctness, runtime fragility |
+
+### Modes
+
+**Fresh review** — `/petra 96`
+- Fetches PR diff, loads REVIEW.md patterns, dispatches 5 agents in parallel
+- Consolidates, deduplicates, verifies via git blame
+- Posts to GitHub with security audit table + severity-sorted findings
+
+**Re-review** — `/petra 96 --re-review`
+- Finds previous PETRA comment, extracts each finding
+- Gets commits since that review (anchored on `headRefOid` SHA)
+- Reports FIXED / NOT FIXED / PARTIALLY FIXED per finding
+- Runs agents only on the inter-diff for new findings
+
+**Self-review** — `/petra --self`
+- Reviews your uncommitted/staged changes before pushing
+- Console-only output, advisory tone
+- No PR needed — works on any branch with local changes
+
+### KAIROS Pattern Learning
+
+Every review comment posted to GitHub IS the learning event. `/petra-rebuild` mines all historical comments and regenerates REVIEW.md:
+- Developer patterns (2+ occurrence threshold, keyed by GitHub handle)
+- Area patterns (grouped by directory)
+- Finding type frequency
+- Codex-unique findings
+
+**Auto-trigger:** `~/.claude/petra-review-count.json` tracks reviews. Every 5 reviews or 2 days, KAIROS runs automatically.
+
+### Battle-Tested
+
+| PR | Target | Blockers | Medium | Low/Nit |
+|---|---|---|---|---|
+| #97 | Knowledge docs | 2 | 9 | 4 |
+| #101 | Review pipeline | 3 | 9 | 4 |
+| #90 | CI workflow + Codex | 3 | 5 | 6 |
+| Sentinel v7 | Self-review | 8 | 13 | 12 |
+
+---
+
+## Model Routing
+
+Every prompt scored across 7 factors. Short follow-ups auto-route to Haiku. Debugging and code review enforce a Sonnet floor.
 
 ```
 +---------------------------------------------------------+
-|  Sentinel v5.0 - Cost Optimization                  |
+|  Sentinel v7.0 - Cost Optimization + SOC 2           |
 +---------------------------------------------------------+
 
   Analysis:
@@ -174,173 +254,87 @@ Every prompt scored across 7 factors with tiered keyword weights, word boundary 
 
   Recommendation: /model sonnet
     Reason: Debug task (Sonnet floor)
-
-  Cost (per 1M input tokens):
-    Haiku:  $0.25   Sonnet: $3.00   Opus: $15.00
-
-  Today: 23 prompts | H:16 S:5 O:2 | Est: $1.12
-  Saved vs all-Opus: $4.38
-  Session: 8 prompts (~40K context)
 ```
-
-**v5.0 routing tiers:**
 
 | Tier | Keywords | Effect |
 |------|----------|--------|
-| Debug | error, bug, stack trace, crash, race condition, etc. (28 keywords) | Sonnet floor — debugging never routes to Haiku |
-| Review | review, PR, diff, critique, etc. (15 keywords) | Sonnet floor; large multi-file reviews → Opus |
-| Complex | architect, design system, deep dive, etc. | Push toward Opus |
-| Simple | show me, what is, list, etc. | Push toward Haiku |
-| Downgrade | just, quickly, trivial, etc. | Push toward cheaper models |
+| Debug | error, bug, stack trace, crash, race condition (28 keywords) | Sonnet floor |
+| Review | review, PR, diff, critique (15 keywords) | Sonnet floor; large reviews → Opus |
+| Complex | architect, design system, deep dive | Push toward Opus |
+| Simple | show me, what is, list | Push toward Haiku |
+| Downgrade | just, quickly, trivial | Push cheaper |
 
-At deeper sessions, cache cost alerts and smart compaction recommendations appear:
+---
 
-```
-  WARNING: Session depth: 25 prompts (~125K context)
-    Cache write/prompt: Opus=$2.34  Sonnet=$0.47
-    -> Cache costs growing — try /compact or start fresh
+## SOC 2 Compliance
 
-  COMPACT [HIGH]: 5 subagent spawns inflating context
-    -> /compact — subagent results dominate context
-```
+### PHI Scanner (18 HIPAA Safe Harbor Identifiers)
 
-### 2. Git Hygiene (commit-msg, prepare-commit-msg, pre-push)
+All patterns loaded from `config/phi_patterns.json` — single source of truth shared by sentinel.py, pre_tool_use.sh, and petra-security.
 
-Three git hooks working together to keep your history clean:
+| # | Identifier | Pattern |
+|---|---|---|
+| 1 | Names (patient context) | `patient/pt + medical verb` |
+| 2 | Geographic data | ZIP codes |
+| 3 | Dates | DOB, admission, discharge, death |
+| 4 | Phone numbers | US format |
+| 5 | Fax numbers | Keyword + phone format |
+| 6 | Email addresses | Standard email |
+| 7 | SSN | Excludes 000/666/900-999 |
+| 8 | MRN | Medical record numbers |
+| 9 | Health plan IDs | Beneficiary/member/policy numbers |
+| 10 | Account numbers | 8-12 digit account refs |
+| 11 | License/cert numbers | DEA, NPI, medical license |
+| 12 | Vehicle identifiers | VIN (17-char) |
+| 13 | Device identifiers | UDI, serial numbers |
+| 14 | Web URLs | Patient portal links |
+| 15 | IP addresses | IPv4 |
+| 16 | Biometric identifiers | Fingerprint, voiceprint, retina |
+| 17 | Photos | Patient photo filenames |
+| 18 | Unique IDs | patient_id, subscriber_id, member_id |
 
-**prepare-commit-msg** — strips AI trailers before the editor opens:
-- `Co-Authored-By: Claude Code <noreply@anthropic.com>` — removed
-- `Generated with [Claude Code]` — removed
-- Developer never sees them
+**Enforcement modes** (`sentinel_config.json`):
+- `"warn"` — log detection, print warning (default)
+- `"block"` — emit `{"decision":"block"}` + exit code 2, Claude Code refuses the tool call
 
-**commit-msg** — conventional commit enforcement:
-- Blocks commits that don't match `feat|fix|chore|docs|refactor|test|style|ci|perf|build|revert:`
-- Warns on subject lines >72 chars
-- Hints when past tense is used ("Added" -> use imperative)
-- Bypass with `--no-verify` when needed
+### Prompt Audit Trail
+SHA-256 hash of every prompt logged to `prompt_audit.log`. Never stores raw content.
 
-**pre-push** — last line of defense + PR size gating:
-- Scans outgoing commits for leaked AI trailers (scoped to `origin/{default-branch}..HEAD` on new branches)
-- Blocks the push with a clear message showing which commits are dirty
-- **v5.0: PR size gating** — warns at 500+ lines changed, blocks at 2000+ lines with guidance to split
-- Configurable via `CLAUDE_PR_SIZE_WARN` (default: 500) and `CLAUDE_PR_SIZE_BLOCK` (default: 2000) env vars
-- Bypass with `--no-verify`
+### Secret Scanner
+AWS keys (AKIA), GitHub tokens/PATs, Bearer tokens, generic secrets, private keys. Same warn/block enforcement modes.
 
-Install git hooks globally or per-repo:
+### Log Scrubbing
+- Bash commands: only command name + SHA-256 hash logged (never arguments)
+- Git push: tokens redacted from URLs
+- Subagent descriptions: scrubbed (may contain PHI from user prompts)
+
+---
+
+## Git Hygiene
+
+**prepare-commit-msg** — strips AI trailers before the editor opens
+**commit-msg** — conventional commit enforcement (`feat|fix|chore|docs|...`)
+**pre-push** — PR size gating (warn at 500, block at 2000 lines) + AI trailer scan
+
 ```bash
-# Global (all repos)
+# Global install
 git config --global core.hooksPath ~/.claude/plugins/sentinel/git-hooks
 
 # Per-repo
 ln -sf ~/.claude/plugins/sentinel/hooks/commit-msg .git/hooks/commit-msg
-ln -sf ~/.claude/plugins/sentinel/hooks/prepare-commit-msg .git/hooks/prepare-commit-msg
-ln -sf ~/.claude/plugins/sentinel/hooks/pre-push .git/hooks/pre-push
-```
-
-### 3. PreToolUse Hook — Git Command Interception
-
-Fires before Bash tool calls. Catches `git commit`, `gh pr create`, and `git push` commands:
-- Warns when AI markers are present in commit messages or PR bodies
-- Logs git push operations for audit trail
-
-### 4. PostToolUse Hook — DX Feedback + Subagent Tracking
-
-Fires after Write, Edit, Bash, Agent, Read, Glob, and Grep tool calls:
-- **Subagent cost tracking** — counts Agent tool spawns per session, warns at 3 (note) and 5+ (alert with cost guidance)
-- **TDD nudge** — when a source file is written without a corresponding test file, shows a prominent warning with suggested test filename. When tests exist, reminds you to update them
-- **File read counting** — tracks Read/Glob/Grep calls for the smart compaction advisor
-- Tracks all file changes and bash commands to logs for session summary
-
-```
-  +---------------------------------------------------------+
-  |  TDD Nudge: No test file found                         |
-  +---------------------------------------------------------+
-  Source: auth_middleware.py
-  Consider adding: auth_middleware.test.py or test_auth_middleware.py
-```
-
-```
-  +---------------------------------------------------------+
-  |  Subagent Cost Alert                                    |
-  +---------------------------------------------------------+
-  5 subagents spawned this session.
-  Each subagent creates its own context window + token costs.
-  Consider batching work or using direct tool calls instead.
-```
-
-### 5. Stop Hook — Session Summary
-
-When Claude Code finishes a turn, auto-generates:
-```
-+---------------------------------------------------------+
-|  Session Summary (v5.0)                                 |
-+---------------------------------------------------------+
-
-  Routing:  47 prompts (H:28 S:15 O:4)
-  Est cost: $3.42 today
-  Saved:    $8.76 vs all-Opus
-  Files:    12 changes tracked
-  Git ops:  3 operations
-  Agents:   3 subagents spawned
-
-  Context composition:
-    File reads:  18
-    Bash calls:  9
-    Subagents:   3
-```
-
-Appends to `~/.claude/plugins/sentinel/logs/session_summary.log` for async handoffs.
-
-### 6. Session Depth Tracking + Smart Compaction Advisor
-
-Tracks prompt count per session and warns when cache write costs are growing. v5.0 adds a smart compaction advisor that analyzes *why* your context is bloated — not just that it is.
-
-| Threshold | Level | Action |
-|-----------|-------|--------|
-| 15 prompts (~75K context) | TIP | Suggest `/compact` |
-| 25 prompts (~125K context) | WARNING | Cache costs growing, shows $/prompt |
-| 40 prompts (~200K context) | ALERT | Start a new conversation |
-
-**Smart compaction triggers:**
-
-| Condition | Severity | Recommendation |
-|-----------|----------|----------------|
-| 5+ subagent spawns | HIGH | `/compact` — subagent results dominate context |
-| 20+ file reads | HIGH | `/compact` — file content already read |
-| 10+ file reads | MEDIUM | `/compact` — tool output bloating context |
-| 15+ bash calls | MEDIUM | `/compact` or start fresh |
-| 20+ prompts | MEDIUM-HIGH | `/compact` to reduce cache write costs |
-
-### 7. Cost Tracking + Budget Alerts
-
-```bash
-# Today
-python3 ~/.claude/plugins/sentinel/hooks/cost_report.py
-
-# This week by project
-python3 ~/.claude/plugins/sentinel/hooks/cost_report.py --week --project
-
-# All time
-python3 ~/.claude/plugins/sentinel/hooks/cost_report.py --all
-```
-
-Budget alerts at 80% of daily/weekly limits. Configure in `config/budget.json`.
-
-### 8. Router Advisor Agent + Slash Commands
-
-Symlink into any project:
-```bash
-mkdir -p .claude/agents .claude/commands
-ln -s ~/.claude/plugins/sentinel/agents/router-advisor.md .claude/agents/
-ln -s ~/.claude/plugins/sentinel/commands/cost-report.md .claude/commands/
-ln -s ~/.claude/plugins/sentinel/commands/budget-check.md .claude/commands/
 ```
 
 ---
 
-## Works With /fast Mode
+## Cost Tracking
 
-The routing hook runs on `UserPromptSubmit` (before model processing). `/fast` controls output speed. They operate on different layers and stack cleanly.
+Budget alerts at 80% of daily/weekly limits. Configure in `config/budget.json`.
+
+Native `/cost` (Claude Code April 2026) now handles per-model breakdown. Sentinel adds:
+- Historical trends (weekly/monthly)
+- Per-project attribution
+- Savings vs all-Opus baseline
+- Session depth tracking with compaction advisor
 
 ---
 
@@ -356,106 +350,85 @@ Drop `.claude/router-patterns.json` in any project:
 
 ---
 
-## settings.json Reference
-
-Full hooks block that `--force` installs:
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      { "hooks": [{ "type": "command", "command": "python3 ~/.claude/plugins/sentinel/hooks/sentinel.py" }] }
-    ],
-    "PreToolUse": [
-      { "matcher": "Bash", "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/sentinel/hooks/pre_tool_use.sh" }] }
-    ],
-    "PostToolUse": [
-      { "matcher": "Write|Edit|Bash|Agent|Read|Glob|Grep", "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/sentinel/hooks/post_tool_use.sh" }] }
-    ],
-    "Stop": [
-      { "hooks": [{ "type": "command", "command": "bash ~/.claude/plugins/sentinel/hooks/stop_hook.sh" }] }
-    ]
-  }
-}
-```
-
----
-
-## Testing
-
-```bash
-./test_hook.sh
-```
-
-Test suite covering routing accuracy (including debug/review tiers), cost reports, git trailer stripping, conventional commit enforcement, past tense detection, subagent tracking, PR size gating, and all Claude Code hooks.
-
----
-
 ## Structure
 
 ```
 claude-sentinel/
-├── install.sh                     # One-command install (--force, --git-hooks, --update, --all)
-├── uninstall.sh                   # Clean removal (preserves logs)
-├── test_hook.sh                   # Test suite with SDLC-5 sign-off log
-├── VALIDATION.md                  # SDLC-6: UAT checklist
+├── install.sh                          # One-command install
+├── uninstall.sh                        # Clean removal
+├── test_hook.sh                        # Test suite
 ├── plugin/
-│   ├── plugin.json
+│   ├── plugin.json                     # v7.0.0 manifest
 │   ├── hooks/
-│   │   ├── sentinel.py        # 7-factor routing engine + session tracking + smart compaction
-│   │   ├── cost_report.py         # Cost report generator
-│   │   ├── pre_tool_use.sh        # Git command interception
-│   │   ├── post_tool_use.sh       # File change tracking + test nudge + subagent tracking
-│   │   └── stop_hook.sh           # Session summary generator
+│   │   ├── hooks.json                  # Hook registration (all 4 hooks)
+│   │   ├── sentinel.py                 # 7-factor router + PHI scan + budget
+│   │   ├── cost_report.py              # Cost report generator
+│   │   ├── pre_tool_use.sh             # Git hygiene + PHI/secret block
+│   │   ├── pre_tool_use_write.sh       # Write/Edit secret scan
+│   │   ├── post_tool_use.sh            # TDD nudge + subagent tracking
+│   │   └── stop_hook.sh               # Session summary
 │   └── config/
-│       ├── patterns.json          # Routing keywords (with healthcare, debug, review tiers)
-│       └── budget.json            # Daily/weekly limits
-├── git-hooks/
-│   ├── prepare-commit-msg         # Strip AI trailers before editor
-│   ├── commit-msg                 # Conventional commit + final trailer strip
-│   └── pre-push                   # Block pushes with leaked AI trailers + PR size gating
+│       ├── phi_patterns.json           # 18 HIPAA identifiers (single source)
+│       ├── patterns.json               # Routing keywords
+│       ├── budget.json                 # Spend limits
+│       ├── sentinel_config.json        # Feature toggles + enforcement modes
+│       └── review-patterns-seed.md     # Starter REVIEW.md template
 ├── agents/
-│   └── router-advisor.md          # Model selection subagent
+│   ├── router-advisor.md               # Model selection agent
+│   ├── petra-code.md                   # PETRA: code review
+│   ├── petra-simplify.md               # PETRA: simplification
+│   ├── petra-security.md               # PETRA: security (18 HIPAA)
+│   └── petra-history.md                # PETRA: git blame + churn
 ├── commands/
-│   ├── cost-report.md             # /cost-report slash command
-│   └── budget-check.md            # /budget-check slash command
-├── examples/
-│   ├── custom_patterns.json
-│   └── healthcare_patterns.json
-└── docs/
-    ├── ISSUES.md                  # SDLC-10: Issues register with resolution tracking
-    └── ACCESS.md                  # SDLC-12: Role matrix + segregation of duties
+│   ├── petra.md                        # /petra — 5-agent review
+│   ├── petra-rebuild.md                # /petra-rebuild — KAIROS
+│   ├── budget-check.md                 # /budget-check
+│   └── cost-report.md                  # /cost-report (deprecated)
+├── git-hooks/
+│   ├── prepare-commit-msg
+│   ├── commit-msg
+│   └── pre-push
+├── docs/
+│   ├── ACCESS.md                       # SDLC-12: Role matrix
+│   ├── ISSUES.md                       # SDLC-10: Issues register
+│   └── reviews/                        # PETRA review artifacts
+└── examples/
+    ├── custom_patterns.json
+    └── healthcare_patterns.json
 ```
 
-## ITGC-SDLC Compliance
+---
 
-The model router is engineered to satisfy ITGC SDLC controls. Full compliance documentation:
+## ITGC-SDLC Compliance
 
 | Control | Name | Document |
 |---------|------|----------|
 | SDLC-1 | Overview / Specs | `README.md`, `plugin.json` |
-| SDLC-2 | Pre-Dev Approval | `CONTRIBUTING.md` (PR workflow) |
-| SDLC-3 | Project Governance | `README.md` (version history), git log |
-| SDLC-4 | System Changes | `commit-msg` hook (conventional commits), `cost_log.csv` |
-| SDLC-5 | IT Testing | `test_hook.sh` with sign-off log (`logs/test_results.log`) |
-| SDLC-6 | User Acceptance Testing | `VALIDATION.md` (UAT checklist) |
-| SDLC-7 | Data Conversion | `install.sh --update` (config preservation + backup) |
-| SDLC-8 | Reports | `cost_report.py`, `stop_hook.sh` (session summaries) |
-| SDLC-9 | Interfaces | `plugin.json`, `settings.json` reference block |
-| SDLC-10 | Issues Log | `docs/ISSUES.md` (issues register) |
-| SDLC-11 | Pre-Migration Approval | `pre-push` hook (go-live gate) |
-| SDLC-12 | Access Security | `docs/ACCESS.md` (role matrix + SoD) |
+| SDLC-2 | Pre-Dev Approval | `CONTRIBUTING.md` |
+| SDLC-3 | Project Governance | `README.md`, git log |
+| SDLC-4 | System Changes | `commit-msg` hook, `cost_log.csv` |
+| SDLC-5 | IT Testing | `test_hook.sh` |
+| SDLC-6 | User Acceptance Testing | `VALIDATION.md` |
+| SDLC-7 | Data Conversion | `install.sh --update` |
+| SDLC-8 | Reports | `cost_report.py`, `stop_hook.sh` |
+| SDLC-9 | Interfaces | `plugin.json`, `hooks.json` |
+| SDLC-10 | Issues Log | `docs/ISSUES.md` |
+| SDLC-11 | Pre-Migration Approval | `pre-push` hook |
+| SDLC-12 | Access Security | `docs/ACCESS.md` |
 
 ---
 
 ## Version History
 
-- **v5.0.0** - Debug keyword tier (28 keywords, Sonnet floor for debugging), code review routing (15 keywords, Sonnet floor + Opus for large reviews), subagent cost tracking (warns at 3/5+ spawns), TDD nudge (missing test file warnings with suggested filenames), PR size gating (configurable warn/block thresholds), smart compaction advisor (analyzes why context is bloated — subagents, file reads, bash output), enhanced session summary with savings and context composition breakdown, PostToolUse matcher expanded to Agent|Read|Glob|Grep
-- **v4.0.1** - Fix pre-push hook scanning entire git history on new branches — now scopes to `origin/{main,master}..HEAD` instead of walking all reachable commits; fix awk SHA parsing in blocked-commit listing
-- **v4.0.0** - Tiered keyword weights (1-4 pts by signal strength), word boundary regex matching, downgrade signals ("just", "quickly", "trivial"), stricter opus threshold (10 vs 7), wider haiku band (score <= -1), short prompt cap (<60 chars can't trigger opus), expanded continuation detection (35+ phrases), savings tracking vs all-opus baseline, session depth tracking with cache cost alerts at 15/25/40 prompt thresholds
-- **v3.1.0** - Token-weighted cost estimates (prompt length / 4 + context overhead), per-row Opus baseline calculation, backward-compatible CSV format, honest savings metrics
-- **v3.0.0** - Git hygiene (3 hooks), PreToolUse/PostToolUse/Stop Claude Code hooks, conventional commit enforcement, session telemetry, restructured install with --update/--git-hooks/--all, JSON validation
-- **v2.0.0** - Cost tracking, budget alerts, conversation depth, agents, commands
-- **v1.0.0** - Multi-factor keyword routing
+- **v7.0.0** — PETRA review pipeline (5 agents + Codex), re-review mode, self-review mode, KAIROS auto-rebuild, 18 HIPAA Safe Harbor PHI patterns (single source of truth), PHI/secret blocking mode (exit code 2), all 4 hooks registered, session ID consistency, log scrubbing, deprecated /cost-report
+- **v6.0.0** — SOC 2 compliance layer: PHI scanner, prompt audit trail, secret scanner, sensitive file detection
+- **v5.0.0** — Debug/review routing tiers, subagent tracking, TDD nudge, PR size gating, smart compaction
+- **v4.0.1** — Fix pre-push scope on new branches
+- **v4.0.0** — Tiered keyword weights, downgrade signals, session depth tracking
+- **v3.1.0** — Token-weighted cost estimates
+- **v3.0.0** — Git hygiene, PreToolUse/PostToolUse/Stop hooks, conventional commits
+- **v2.0.0** — Cost tracking, budget alerts, agents, commands
+- **v1.0.0** — Multi-factor keyword routing
 
 ## Author
 
