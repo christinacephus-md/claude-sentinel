@@ -132,6 +132,8 @@ For each `blocker` or `medium` finding:
 **Fresh review format:**
 
 ```markdown
+`✦ PETRA v7.0 · 5 agents · KAIROS ✦`
+
 ## PETRA Review — #<NUMBER>
 
 **Agents:** petra-code · petra-simplify · petra-security · petra-history · codex

@@ -1,6 +1,10 @@
 # Claude Sentinel v7.0
 
 <p align="center">
+  <img src="Sentinel.png" alt="Claude Sentinel v7.0" width="700">
+</p>
+
+<p align="center">
   <strong>The full Claude Code discipline layer + PETRA review pipeline.</strong><br>
   Model routing, PETRA multi-agent code review, KAIROS pattern learning, 18 HIPAA Safe Harbor PHI scanning, SOC 2 compliance, git hygiene, cost tracking, and enterprise developer onboarding — installed with one command.
 </p>
