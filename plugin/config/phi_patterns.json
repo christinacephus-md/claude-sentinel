@@ -16,7 +16,7 @@
     "license": "\\b(?:DEA|NPI|license)\\s*[:#]?\\s*[A-Z0-9]{7,15}\\b",
     "vin": "\\b[A-HJ-NPR-Z0-9]{17}\\b",
     "device_id": "\\b(?:UDI|device|serial)\\s*[:#]?\\s*[A-Z0-9\\-]{10,20}\\b",
-    "patient_url": "\\b(?:patient|portal|mychart)\\S*https?://\\S+\\b",
+    "patient_url": "\\bhttps?://\\S*(?:patient|portal|mychart)\\S*\\b",
     "ip_address": "\\b(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\b",
     "biometric": "\\b(?:fingerprint|voiceprint|retina|iris|facial recognition|biometric)\\s+(?:data|scan|id|record)\\b",
     "photo": "\\b(?:patient|face|headshot|photo)_?\\w*\\.(?:jpg|jpeg|png|gif|bmp|tiff)\\b",

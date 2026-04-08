@@ -70,7 +70,9 @@ fi
 if [ "$IS_GIT_PUSH" -gt 0 ]; then
   LOG_DIR="$ROUTER_HOME/logs"
   mkdir -p "$LOG_DIR"
-  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | git push | $COMMAND" >> "$LOG_DIR/git_operations.log"
+  # Log git push with only the remote name, not the full URL (may contain tokens)
+  PUSH_REMOTE=$(echo "$COMMAND" | awk '{for(i=1;i<=NF;i++) if($i=="push") print $(i+1)}' | sed 's|https://[^@]*@|https://***@|g')
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | git push | ${PUSH_REMOTE:-origin}" >> "$LOG_DIR/git_operations.log"
 fi
 
 # --- v6.0: Combined PHI + Secret scanning for Bash commands ---
@@ -126,33 +128,29 @@ print('|'.join(results) if results else '')
     mkdir -p "$LOG_DIR"
     SESSION_ID="${CLAUDE_SESSION_ID:-unknown}"
 
-    # Read enforcement mode from config
-    PHI_ENFORCEMENT=$(python3 -c "
+    # Read enforcement modes from config (single Python call for both)
+    ENFORCEMENT=$(python3 -c "
 import json, os
+rh = os.environ.get('CLAUDE_ROUTER_HOME', os.path.join(os.path.expanduser('~'), '.claude', 'plugins', 'sentinel'))
 try:
-    with open(os.path.join('$ROUTER_HOME', 'config', 'sentinel_config.json')) as f:
+    with open(os.path.join(rh, 'config', 'sentinel_config.json')) as f:
         c = json.load(f)
-    print(c.get('features',{}).get('phi_scanner',{}).get('enforcement','warn'))
-except: print('warn')
+    phi_e = c.get('features',{}).get('phi_scanner',{}).get('enforcement','warn')
+    sec_e = c.get('features',{}).get('secret_scanner',{}).get('enforcement','warn')
+    print(f'{phi_e}|{sec_e}')
+except: print('warn|warn')
 " 2>/dev/null)
-    SECRET_ENFORCEMENT=$(python3 -c "
-import json, os
-try:
-    with open(os.path.join('$ROUTER_HOME', 'config', 'sentinel_config.json')) as f:
-        c = json.load(f)
-    print(c.get('features',{}).get('secret_scanner',{}).get('enforcement','warn'))
-except: print('warn')
-" 2>/dev/null)
+    PHI_ENFORCEMENT=$(echo "$ENFORCEMENT" | cut -d'|' -f1)
+    SECRET_ENFORCEMENT=$(echo "$ENFORCEMENT" | cut -d'|' -f2)
 
-    SHOULD_BLOCK=0
+    BLOCK_REASONS=""
 
     # Parse and handle PHI detections
     if echo "$SCAN_RESULT" | grep -q "phi:"; then
       PHI_TYPES=$(echo "$SCAN_RESULT" | grep -o 'phi:[^|]*' | sed 's/phi://')
       echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | $PHI_TYPES | bash | session=$SESSION_ID" >> "$LOG_DIR/phi_detections.log"
       if [ "$PHI_ENFORCEMENT" = "block" ]; then
-        echo '{"decision":"block","reason":"PHI detected in Bash command: '"$PHI_TYPES"'. Configure enforcement in sentinel_config.json."}'
-        SHOULD_BLOCK=1
+        BLOCK_REASONS="PHI detected: $PHI_TYPES"
       else
         echo "" >&2
         echo "  PHI WARNING: Potential PHI in Bash command ($PHI_TYPES)" >&2
@@ -166,8 +164,11 @@ except: print('warn')
       SECRET_TYPES=$(echo "$SCAN_RESULT" | grep -o 'secret:[^|]*' | sed 's/secret://')
       echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | $SECRET_TYPES | bash | session=$SESSION_ID" >> "$LOG_DIR/secret_detections.log"
       if [ "$SECRET_ENFORCEMENT" = "block" ]; then
-        echo '{"decision":"block","reason":"Secret detected in Bash command: '"$SECRET_TYPES"'. Configure enforcement in sentinel_config.json."}'
-        SHOULD_BLOCK=1
+        if [ -n "$BLOCK_REASONS" ]; then
+          BLOCK_REASONS="$BLOCK_REASONS; Secret detected: $SECRET_TYPES"
+        else
+          BLOCK_REASONS="Secret detected: $SECRET_TYPES"
+        fi
       else
         echo "" >&2
         echo "  SECRET WARNING: Potential secrets in Bash command ($SECRET_TYPES)" >&2
@@ -176,8 +177,9 @@ except: print('warn')
       fi
     fi
 
-    # Exit with code 2 to block tool call (per Claude Code April 2026 hook spec)
-    if [ "$SHOULD_BLOCK" -eq 1 ]; then
+    # Emit single JSON block and exit 2 (per Claude Code April 2026 hook spec)
+    if [ -n "$BLOCK_REASONS" ]; then
+      echo "{\"decision\":\"block\",\"reason\":\"$BLOCK_REASONS. Configure enforcement in sentinel_config.json.\"}"
       exit 2
     fi
   fi

@@ -34,7 +34,8 @@ if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
 fi
 
 # Parse flags
-BASE=$(echo "$ARGUMENTS" | grep -oP '(?<=--base\s)\S+' || echo "main")
+BASE=$(echo "$ARGUMENTS" | sed -n 's/.*--base \([^ ]*\).*/\1/p')
+BASE="${BASE:-main}"
 ```
 
 ## Step 2: Gather Context

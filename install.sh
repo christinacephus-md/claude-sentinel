@@ -1,5 +1,5 @@
 #!/bin/bash
-# Claude Sentinel v6.0 - Installation Script
+# Claude Sentinel v7.0 - Installation Script
 # The full Claude Code discipline layer.
 #
 # Usage:

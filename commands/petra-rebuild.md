@@ -33,7 +33,8 @@ gh api "repos/$REPO/pulls/comments" --paginate --jq '.[] | {
 
 # Also get PR review bodies (the top-level review summaries)
 # Rate-limit safe: pause every 10 requests
-LIMIT=$(echo "$ARGUMENTS" | grep -oP '(?<=--limit\s)\d+' || echo "100")
+LIMIT=$(echo "$ARGUMENTS" | sed -n 's/.*--limit \([0-9]*\).*/\1/p')
+LIMIT="${LIMIT:-100}"
 COUNT=0
 for pr in $(gh pr list --repo "$REPO" --state merged --limit "$LIMIT" --json number --jq '.[].number'); do
   gh api "repos/$REPO/pulls/$pr/reviews" --jq '.[] | {

@@ -154,8 +154,9 @@ if [ "$TOOL_NAME" = "Bash" ]; then
 
   # Hash command instead of logging raw content — may contain secrets/PHI
   CMD_HASH=$(echo -n "$COMMAND" | shasum -a 256 | cut -d' ' -f1)
-  CMD_PREFIX=$(echo "$COMMAND" | cut -c1-30 | sed 's/[^a-zA-Z0-9 _\-\/\.]//g')
-  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | bash | ${CMD_PREFIX}... | sha256:${CMD_HASH:0:16}" >> "$LOG_DIR/session_commands.log"
+  # Log only the first token (command name) — never arguments (may contain secrets/PHI)
+  CMD_NAME=$(echo "$COMMAND" | awk '{print $1}' | sed 's/[^a-zA-Z0-9_\-\/\.]//g')
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | bash | ${CMD_NAME} | sha256:${CMD_HASH:0:16}" >> "$LOG_DIR/session_commands.log"
 
   increment_session_counter "bash_calls"
 fi
