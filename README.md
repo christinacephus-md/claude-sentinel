@@ -173,15 +173,35 @@ cd claude-sentinel
 ./install.sh --update --force
 ```
 
-After install, you get:
+### What Runs Automatically (no commands needed)
 
-| Command | What It Does |
+These fire on every Claude Code session — zero setup after install:
+
+| Hook | When | What It Does |
+|---|---|---|
+| **Model Router** | Every prompt | Scores and recommends haiku/sonnet/opus |
+| **PHI Scanner** | Every prompt + bash command | Warns or blocks on 18 HIPAA identifiers |
+| **Secret Scanner** | Every bash + file write | Warns or blocks on AWS keys, tokens, secrets |
+| **Git Hygiene** | Every git commit/push | Strips AI trailers, enforces conventional commits |
+| **TDD Nudge** | Every file write | Warns when test file is missing |
+| **Subagent Tracker** | Every Agent spawn | Warns at 5+ subagents on cost |
+| **Session Summary** | Session end | Model distribution, cost, savings report |
+| **Prompt Audit** | Every prompt | SHA-256 hash trail (never stores content) |
+
+### What You Invoke (natural language — not slash commands)
+
+PETRA and budget tools are registered as **skills**, not native slash commands. Invoke them by asking Claude:
+
+| Say This | What It Does |
 |---|---|
-| `/petra <PR#>` | 5-agent parallel PR review, consolidate, post to GitHub |
-| `/petra <PR#> --re-review` | Track FIXED / NOT FIXED per finding |
-| `/petra --self` | Review uncommitted changes before pushing |
-| `/petra-rebuild` | KAIROS: regenerate REVIEW.md from PR history |
-| `/budget-check` | Check spending against daily/weekly limits |
+| `run petra on PR 96` | Full 5-agent parallel review, posts to GitHub |
+| `run petra on PR 96 --re-review` | Track FIXED / NOT FIXED from previous review |
+| `run petra --self` | Review your uncommitted changes before pushing |
+| `run petra-rebuild` | KAIROS: regenerate REVIEW.md from PR history |
+| `run budget-check` | Check spending against daily/weekly limits |
+| `run cost-report` | Legacy cost report (deprecated — use native `/cost`) |
+
+> **Note:** These are not `/slash` commands. Claude Code recognizes them as skills and executes the full workflow. Just describe what you want in plain English.
 
 ---
 
@@ -201,18 +221,18 @@ After install, you get:
 
 ### Modes
 
-**Fresh review** — `/petra 96`
+**Fresh review** — say `run petra on PR 96`
 - Fetches PR diff, loads REVIEW.md patterns, dispatches 5 agents in parallel
 - Consolidates, deduplicates, verifies via git blame
 - Posts to GitHub with security audit table + severity-sorted findings
 
-**Re-review** — `/petra 96 --re-review`
+**Re-review** — say `run petra on PR 96 --re-review`
 - Finds previous PETRA comment, extracts each finding
 - Gets commits since that review (anchored on `headRefOid` SHA)
 - Reports FIXED / NOT FIXED / PARTIALLY FIXED per finding
 - Runs agents only on the inter-diff for new findings
 
-**Self-review** — `/petra --self`
+**Self-review** — say `run petra --self`
 - Reviews your uncommitted/staged changes before pushing
 - Console-only output, advisory tone
 - No PR needed — works on any branch with local changes
