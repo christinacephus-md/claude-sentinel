@@ -126,23 +126,59 @@ print('|'.join(results) if results else '')
     mkdir -p "$LOG_DIR"
     SESSION_ID="${CLAUDE_SESSION_ID:-unknown}"
 
-    # Parse and display warnings
+    # Read enforcement mode from config
+    PHI_ENFORCEMENT=$(python3 -c "
+import json, os
+try:
+    with open(os.path.join('$ROUTER_HOME', 'config', 'sentinel_config.json')) as f:
+        c = json.load(f)
+    print(c.get('features',{}).get('phi_scanner',{}).get('enforcement','warn'))
+except: print('warn')
+" 2>/dev/null)
+    SECRET_ENFORCEMENT=$(python3 -c "
+import json, os
+try:
+    with open(os.path.join('$ROUTER_HOME', 'config', 'sentinel_config.json')) as f:
+        c = json.load(f)
+    print(c.get('features',{}).get('secret_scanner',{}).get('enforcement','warn'))
+except: print('warn')
+" 2>/dev/null)
+
+    SHOULD_BLOCK=0
+
+    # Parse and handle PHI detections
     if echo "$SCAN_RESULT" | grep -q "phi:"; then
       PHI_TYPES=$(echo "$SCAN_RESULT" | grep -o 'phi:[^|]*' | sed 's/phi://')
-      echo "" >&2
-      echo "  PHI WARNING: Potential PHI in Bash command ($PHI_TYPES)" >&2
-      echo "  Review command content before proceeding." >&2
-      echo "" >&2
       echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | $PHI_TYPES | bash | session=$SESSION_ID" >> "$LOG_DIR/phi_detections.log"
+      if [ "$PHI_ENFORCEMENT" = "block" ]; then
+        echo '{"decision":"block","reason":"PHI detected in Bash command: '"$PHI_TYPES"'. Configure enforcement in sentinel_config.json."}'
+        SHOULD_BLOCK=1
+      else
+        echo "" >&2
+        echo "  PHI WARNING: Potential PHI in Bash command ($PHI_TYPES)" >&2
+        echo "  Review command content before proceeding." >&2
+        echo "" >&2
+      fi
     fi
 
+    # Parse and handle secret detections
     if echo "$SCAN_RESULT" | grep -q "secret:"; then
       SECRET_TYPES=$(echo "$SCAN_RESULT" | grep -o 'secret:[^|]*' | sed 's/secret://')
-      echo "" >&2
-      echo "  SECRET WARNING: Potential secrets in Bash command ($SECRET_TYPES)" >&2
-      echo "  Use environment variables instead of hardcoded secrets." >&2
-      echo "" >&2
       echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | $SECRET_TYPES | bash | session=$SESSION_ID" >> "$LOG_DIR/secret_detections.log"
+      if [ "$SECRET_ENFORCEMENT" = "block" ]; then
+        echo '{"decision":"block","reason":"Secret detected in Bash command: '"$SECRET_TYPES"'. Configure enforcement in sentinel_config.json."}'
+        SHOULD_BLOCK=1
+      else
+        echo "" >&2
+        echo "  SECRET WARNING: Potential secrets in Bash command ($SECRET_TYPES)" >&2
+        echo "  Use environment variables instead of hardcoded secrets." >&2
+        echo "" >&2
+      fi
+    fi
+
+    # Exit with code 2 to block tool call (per Claude Code April 2026 hook spec)
+    if [ "$SHOULD_BLOCK" -eq 1 ]; then
+      exit 2
     fi
   fi
 fi

@@ -1,15 +1,21 @@
 ---
-description: Show model routing cost report for today, this week, or this month.
+description: "[DEPRECATED] Use native /cost for per-model + cache breakdown. For historical trends, use /budget-check."
 argument-hint: "[--week] [--month] [--all] [--project]"
 ---
 
-Run the cost report script and display the results. Execute this command:
+> **Note:** As of Claude Code v2.1.89 (April 2026), the native `/cost` command now shows per-model split and cache-hit breakdown. This command is deprecated for basic cost visibility.
+>
+> **Use instead:**
+> - `/cost` — native per-model + cache breakdown (built into Claude Code)
+> - `/budget-check` — daily/weekly limits, historical trends, project breakdown (Sentinel)
+
+For legacy compatibility, this still runs the full report:
 
 ```bash
 python3 ~/.claude/plugins/sentinel/hooks/cost_report.py --week --project
 ```
 
-Then summarize the key findings:
+Then summarize:
 1. Total prompts and model distribution
 2. Estimated cost vs all-Opus baseline
 3. Savings achieved

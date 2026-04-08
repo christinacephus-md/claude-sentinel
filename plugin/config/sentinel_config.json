@@ -1,10 +1,11 @@
 {
-  "version": "6.0.0",
+  "version": "7.0.0",
   "features": {
     "phi_scanner": {
       "enabled": true,
       "scan_prompts": true,
-      "scan_bash": true
+      "scan_bash": true,
+      "enforcement": "warn"
     },
     "prompt_audit": {
       "enabled": true
@@ -13,7 +14,8 @@
       "enabled": true,
       "scan_bash": true,
       "scan_writes": true,
-      "scan_file_paths": true
+      "scan_file_paths": true,
+      "enforcement": "warn"
     }
   }
 }
