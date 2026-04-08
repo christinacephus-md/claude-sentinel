@@ -1,5 +1,4 @@
 ---
-name: budget-check
 description: Check current spending against daily and weekly budget limits.
 ---
 

@@ -11,7 +11,7 @@
 
 set -e
 
-VERSION="6.0.0"
+VERSION="7.0.0"
 PLUGIN_DIR="$HOME/.claude/plugins/sentinel"
 SETTINGS="$HOME/.claude/settings.json"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -100,10 +100,41 @@ fi
 
 # Agents and commands
 cp "$SCRIPT_DIR/agents/router-advisor.md" "$PLUGIN_DIR/agents/"
+cp "$SCRIPT_DIR/agents/petra-security.md" "$PLUGIN_DIR/agents/"
+cp "$SCRIPT_DIR/agents/petra-code.md" "$PLUGIN_DIR/agents/"
+cp "$SCRIPT_DIR/agents/petra-simplify.md" "$PLUGIN_DIR/agents/"
 cp "$SCRIPT_DIR/commands/cost-report.md" "$PLUGIN_DIR/commands/"
 cp "$SCRIPT_DIR/commands/budget-check.md" "$PLUGIN_DIR/commands/"
+cp "$SCRIPT_DIR/commands/petra.md" "$PLUGIN_DIR/commands/"
+cp "$SCRIPT_DIR/commands/petra-rebuild.md" "$PLUGIN_DIR/commands/"
+
+# PHI patterns (single source of truth for sentinel.py + pre_tool_use.sh + petra-security)
+cp "$SCRIPT_DIR/plugin/config/phi_patterns.json" "$PLUGIN_DIR/config/"
+cp "$SCRIPT_DIR/plugin/config/review-patterns-seed.md" "$PLUGIN_DIR/config/"
+
+# Register commands as slash commands via symlinks
+CLAUDE_CMDS="$HOME/.claude/commands"
+CLAUDE_AGENTS="$HOME/.claude/agents"
+mkdir -p "$CLAUDE_CMDS" "$CLAUDE_AGENTS"
+ln -sf "$PLUGIN_DIR/commands/petra.md" "$CLAUDE_CMDS/petra.md"
+ln -sf "$PLUGIN_DIR/commands/petra-rebuild.md" "$CLAUDE_CMDS/petra-rebuild.md"
+ln -sf "$PLUGIN_DIR/commands/cost-report.md" "$CLAUDE_CMDS/cost-report.md"
+ln -sf "$PLUGIN_DIR/commands/budget-check.md" "$CLAUDE_CMDS/budget-check.md"
+ln -sf "$PLUGIN_DIR/agents/petra-security.md" "$CLAUDE_AGENTS/petra-security.md"
+ln -sf "$PLUGIN_DIR/agents/petra-code.md" "$CLAUDE_AGENTS/petra-code.md"
+ln -sf "$PLUGIN_DIR/agents/petra-simplify.md" "$CLAUDE_AGENTS/petra-simplify.md"
+ln -sf "$PLUGIN_DIR/agents/router-advisor.md" "$CLAUDE_AGENTS/router-advisor.md"
 
 echo "  Core files installed."
+echo "  PETRA commands: /petra, /petra-rebuild"
+echo "  PETRA agents: petra-security, petra-code, petra-simplify"
+
+# Check for gh CLI (required by PETRA)
+if command -v gh &> /dev/null; then
+  echo "  GitHub CLI: $(gh --version | head -1)"
+else
+  echo "  ⚠ GitHub CLI not found — PETRA commands require 'gh'. Install: https://cli.github.com"
+fi
 
 # --- Wire Claude Code settings.json ---
 

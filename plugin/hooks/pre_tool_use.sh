@@ -92,13 +92,14 @@ results = []
 
 # PHI scan
 if features.get('phi_scanner', {}).get('scan_bash', True):
-    phi = {
-        'ssn': r'\b\d{3}-\d{2}-\d{4}\b',
-        'dob': r'\b(?:DOB|date of birth)\s*[:\-]?\s*\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}\b',
-        'mrn': r'\b(?:MRN|medical record)\s*[:#]?\s*\d{6,10}\b',
-        'phone': r'\b(?:\+1[\s\-]?)?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{4}\b',
-        'email': r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b',
-    }
+    # Load from shared phi_patterns.json (single source of truth)
+    phi = {}
+    try:
+        with open(os.path.join(rh, 'config', 'phi_patterns.json')) as pf:
+            phi = json.load(pf).get('patterns', {})
+    except: pass
+    if not phi:
+        phi = {'ssn': r'\b\d{3}-\d{2}-\d{4}\b', 'email': r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b'}
     hits = [n for n, p in phi.items() if re.search(p, text, re.IGNORECASE)]
     if hits:
         results.append('phi:' + ','.join(hits))

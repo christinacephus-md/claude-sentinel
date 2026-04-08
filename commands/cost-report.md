@@ -1,6 +1,6 @@
 ---
-name: cost-report
 description: Show model routing cost report for today, this week, or this month.
+argument-hint: "[--week] [--month] [--all] [--project]"
 ---
 
 Run the cost report script and display the results. Execute this command:

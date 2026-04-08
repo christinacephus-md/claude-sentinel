@@ -1,7 +1,7 @@
 {
   "name": "sentinel",
-  "version": "6.0.0",
-  "description": "Claude Code discipline layer + SOC 2 compliance — cost tracking, git hygiene, PHI scanning, prompt audit, secret detection, TDD nudge, subagent awareness, PR size gating",
+  "version": "7.0.0",
+  "description": "Claude Code discipline layer + SOC 2 compliance + PETRA review system — cost tracking, git hygiene, PHI scanning, prompt audit, secret detection, TDD nudge, subagent awareness, PR size gating, multi-agent code review with KAIROS pattern learning",
   "author": "Christina Cephus",
   "hooks": {
     "UserPromptSubmit": "hooks/sentinel.py",
@@ -17,8 +17,18 @@
   "components": {
     "routing": "hooks/sentinel.py",
     "cost_report": "hooks/cost_report.py",
-    "agents": ["agents/router-advisor.md"],
-    "commands": ["commands/cost-report.md", "commands/budget-check.md"]
+    "agents": [
+      "agents/router-advisor.md",
+      "agents/petra-security.md",
+      "agents/petra-code.md",
+      "agents/petra-simplify.md"
+    ],
+    "commands": [
+      "commands/cost-report.md",
+      "commands/budget-check.md",
+      "commands/petra.md",
+      "commands/petra-rebuild.md"
+    ]
   },
   "v5_skills": {
     "debug_routing": "Debug keyword tier — Sonnet minimum for debugging tasks",
@@ -34,9 +44,17 @@
     "secret_scanner": "Secret/credential detection in commands and file writes (SOC 2)",
     "sensitive_file_detection": "Warns when writing to .env, credentials.json, *.pem, etc."
   },
+  "v7_skills": {
+    "petra_review": "/petra — 4-agent parallel PR review with KAIROS pattern learning",
+    "petra_rebuild": "/petra-rebuild — KAIROS pattern extraction from GitHub PR history",
+    "phi_patterns_unified": "18 HIPAA Safe Harbor patterns in single config file (phi_patterns.json)",
+    "repo_agnostic": "Auto-detect repo from git remote for all gh commands"
+  },
   "config": {
     "pr_size_warn": "CLAUDE_PR_SIZE_WARN env var (default: 500 lines)",
     "pr_size_block": "CLAUDE_PR_SIZE_BLOCK env var (default: 2000 lines)",
-    "sentinel_config": "config/sentinel_config.json — feature toggles for v6.0 SOC 2 features"
+    "sentinel_config": "config/sentinel_config.json — feature toggles for v6.0 SOC 2 features",
+    "phi_patterns": "config/phi_patterns.json — 18 HIPAA Safe Harbor identifiers (single source of truth)",
+    "review_patterns_seed": "config/review-patterns-seed.md — starter REVIEW.md template"
   }
 }
