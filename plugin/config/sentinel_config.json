@@ -5,7 +5,7 @@
       "enabled": true,
       "scan_prompts": true,
       "scan_bash": true,
-      "enforcement": "warn"
+      "enforcement": "block"
     },
     "prompt_audit": {
       "enabled": true
@@ -15,7 +15,7 @@
       "scan_bash": true,
       "scan_writes": true,
       "scan_file_paths": true,
-      "enforcement": "warn"
+      "enforcement": "block"
     }
   }
 }
