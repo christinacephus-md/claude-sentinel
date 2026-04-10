@@ -10,7 +10,8 @@ INPUT=$(cat)
 TOOL_NAME=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('tool_name',''))" 2>/dev/null)
 COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
 
-ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/sentinel}"
+# Hardcoded — no env var override. Prevents redirect to attacker-controlled config.
+ROUTER_HOME="$HOME/.claude/plugins/sentinel"
 
 # Only process Bash tool calls
 if [ "$TOOL_NAME" != "Bash" ]; then
@@ -128,20 +129,10 @@ print('|'.join(results) if results else '')
     mkdir -p "$LOG_DIR"
     SESSION_ID="${CLAUDE_SESSION_ID:-unknown}"
 
-    # Read enforcement modes from config (single Python call for both)
-    ENFORCEMENT=$(python3 -c "
-import json, os
-rh = os.environ.get('CLAUDE_ROUTER_HOME', os.path.join(os.path.expanduser('~'), '.claude', 'plugins', 'sentinel'))
-try:
-    with open(os.path.join(rh, 'config', 'sentinel_config.json')) as f:
-        c = json.load(f)
-    phi_e = c.get('features',{}).get('phi_scanner',{}).get('enforcement','warn')
-    sec_e = c.get('features',{}).get('secret_scanner',{}).get('enforcement','warn')
-    print(f'{phi_e}|{sec_e}')
-except: print('warn|warn')
-" 2>/dev/null)
-    PHI_ENFORCEMENT=$(echo "$ENFORCEMENT" | cut -d'|' -f1)
-    SECRET_ENFORCEMENT=$(echo "$ENFORCEMENT" | cut -d'|' -f2)
+    # Enforcement is hardcoded to "block" — not configurable.
+    # PHI and secrets in bash commands are always blocked in production.
+    PHI_ENFORCEMENT="block"
+    SECRET_ENFORCEMENT="block"
 
     BLOCK_REASONS=""
 

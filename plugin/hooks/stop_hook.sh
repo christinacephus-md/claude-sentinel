@@ -4,7 +4,7 @@
 # v5.0: Smart compaction advisor, subagent cost summary
 # v6.0: SOC 2 compliance layer (PHI, audit, secrets)
 
-ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/sentinel}"
+ROUTER_HOME="$HOME/.claude/plugins/sentinel"
 LOG_DIR="$ROUTER_HOME/logs"
 COST_LOG="$LOG_DIR/cost_log.csv"
 SESSION_LOG="$LOG_DIR/session_summary.log"

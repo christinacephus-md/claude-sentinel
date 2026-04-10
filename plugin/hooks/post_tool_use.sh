@@ -9,7 +9,7 @@ INPUT=$(cat)
 TOOL_NAME=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('tool_name',''))" 2>/dev/null)
 TOOL_INPUT=$(echo "$INPUT" | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin).get('tool_input',{})))" 2>/dev/null)
 
-ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/sentinel}"
+ROUTER_HOME="$HOME/.claude/plugins/sentinel"
 LOG_DIR="$ROUTER_HOME/logs"
 SESSION_DIR="$ROUTER_HOME/logs/sessions"
 mkdir -p "$LOG_DIR" "$SESSION_DIR"

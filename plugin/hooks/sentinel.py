@@ -31,10 +31,9 @@ from pathlib import Path
 
 # --- Configuration ---
 
-ROUTER_HOME = os.environ.get(
-    'CLAUDE_ROUTER_HOME',
-    os.path.expanduser('~/.claude/plugins/sentinel')
-)
+# Hardcoded path — no env var override allowed in production.
+# Prevents CLAUDE_ROUTER_HOME redirect to attacker-controlled configs.
+ROUTER_HOME = os.path.expanduser('~/.claude/plugins/sentinel')
 CONFIG_FILE = os.path.join(ROUTER_HOME, 'config', 'patterns.json')
 SENTINEL_CONFIG_FILE = os.path.join(ROUTER_HOME, 'config', 'sentinel_config.json')
 COST_LOG = os.path.join(ROUTER_HOME, 'logs', 'cost_log.csv')
@@ -51,9 +50,14 @@ def _load_phi_patterns():
     phi_file = os.path.join(ROUTER_HOME, 'config', 'phi_patterns.json')
     try:
         with open(phi_file) as f:
-            return json.load(f).get('patterns', {})
+            patterns = json.load(f).get('patterns', {})
+        if len(patterns) < 15:
+            print(f'\n  SENTINEL WARNING: Only {len(patterns)} PHI patterns loaded (expected 18+)', file=sys.stderr)
+            print('  PHI scanning coverage is degraded. Run: install.sh --update\n', file=sys.stderr)
+        return patterns
     except Exception:
-        # Fallback: minimal critical patterns if config missing
+        print('\n  SENTINEL WARNING: phi_patterns.json missing or corrupt — using 3-pattern fallback', file=sys.stderr)
+        print('  PHI scanning severely degraded. Run: install.sh --update\n', file=sys.stderr)
         return {
             'ssn': r'\b(?!000|666|9\d{2})\d{3}[- ]?\d{2}[- ]?\d{4}\b',
             'email': r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b',
@@ -837,7 +841,11 @@ def main():
         print('\n'.join(output_lines))
         sys.exit(0)
 
-    except Exception:
+    except Exception as e:
+        # Fail-closed: if Sentinel crashes, warn loudly but don't block
+        # (blocking on crash could lock out the entire Claude Code session)
+        print(f'\n  SENTINEL ERROR: Hook crashed — {type(e).__name__}', file=sys.stderr)
+        print('  Security scanning may be degraded. Run: install.sh --update\n', file=sys.stderr)
         sys.exit(0)
 
 

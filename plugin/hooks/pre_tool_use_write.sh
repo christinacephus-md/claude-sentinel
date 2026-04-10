@@ -6,7 +6,7 @@
 INPUT=$(cat)
 
 TOOL_NAME=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('tool_name',''))" 2>/dev/null)
-ROUTER_HOME="${CLAUDE_ROUTER_HOME:-$HOME/.claude/plugins/sentinel}"
+ROUTER_HOME="$HOME/.claude/plugins/sentinel"
 
 # Only process Write/Edit tool calls
 if [ "$TOOL_NAME" != "Write" ] && [ "$TOOL_NAME" != "Edit" ]; then
@@ -17,7 +17,7 @@ fi
 SECRET_ENABLED=$(python3 -c "
 import json, os
 try:
-    rh = os.environ.get('CLAUDE_ROUTER_HOME', os.path.expanduser('~/.claude/plugins/sentinel'))
+    rh = os.path.expanduser('~/.claude/plugins/sentinel')
     with open(os.path.join(rh, 'config', 'sentinel_config.json')) as f:
         c = json.load(f)
     print('1' if c.get('features',{}).get('secret_scanner',{}).get('scan_writes',True) else '0')
